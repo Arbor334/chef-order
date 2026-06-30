@@ -45,48 +45,75 @@ export async function initChefPage() {
   renderPendingBadge();
 }
 
-// ===== Banner =====
+// ===== Banner — 最简实现 =====
 async function renderBanner() {
   try {
     const b = await loadBanner();
     const m = document.getElementById('cust-banner-msg');
     const g = document.getElementById('cust-banner-bg');
-    if (!m || !g) return;
-    const hasMsg = b.message && b.message.trim();
-    const hasImg = b.image_url && b.image_url.length > 10;
-    m.textContent = hasMsg ? b.message : '今天想吃点什么？';
-    if (hasImg) {
+    if (!m) return;
+    m.textContent = (b.message && b.message.trim()) ? b.message : '今天想吃点什么？';
+    if (b.image_url && b.image_url.length > 10) {
       g.style.backgroundImage = `url(${b.image_url})`;
       g.classList.add('has-bg');
     } else {
       g.style.backgroundImage = '';
       g.classList.remove('has-bg');
     }
-    document.getElementById('cust-banner').style.display = '';
   } catch (_) {}
 }
 
-async function showBannerForm() {
+function showBannerForm() {
   let banner = { message: '', image_url: '' };
-  try { banner = await loadBanner(); } catch (_) { }
-  const html = `<div class="form-g"><label>今天想对她说什么</label><textarea id="bn-msg" rows="3" placeholder="比如：今天做了红烧肉~">${banner.message||''}</textarea></div>
-    <div class="form-g"><label>背景图</label><input type="file" id="bn-img" accept="image/*"/>${banner.image_url?`<div class="form-img-preview"><img src="${banner.image_url}"/></div>`:''}</div>`;
-  const result = await modal('📢 每日示爱', html, [{ text: '取消', value: 'no' }, { text: '保存并推送 💌', value: 'ok', cls: 'btn-primary' }]);
-  // 必须在 remove 之前读取表单
-  const msg = result.overlay.querySelector('#bn-msg')?.value?.trim() || '';
-  let img = banner.image_url || '';
-  const f = result.overlay.querySelector('#bn-img')?.files?.[0];
-  result.overlay.remove();
-  if (result.value !== 'ok') return;
-  console.log('[banner] saving:', msg, f?.name, img);
-  if (f) { try { img = await uploadImage(f); } catch (e) { toast('上传失败','error'); return; } }
-  const sb = getSupabase();
-  // 先删后插，避免 upsert 冲突问题
-  await sb.from('banner').delete().neq('id', 0);
-  const { error } = await sb.from('banner').insert({ id: 1, message: msg, image_url: img });
-  if (error) { console.error('[banner]', error); toast('保存失败: ' + error.message, 'error'); return; }
-  await renderBanner();
-  toast('已推送 💌', 'success');
+  loadBanner().then(b => { banner = b; }).catch(() => {});
+
+  // 直接用 DOM 创建表单，不依赖 modal 函数
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal-box">
+    <div class="modal-head">📢 每日示爱</div>
+    <div class="modal-body">
+      <div class="form-g"><label>今天想说的话</label><textarea id="ban-msg" rows="3" placeholder="比如：今天做了红烧肉~"></textarea></div>
+      <div class="form-g"><label>背景图（可选）</label><input type="file" id="ban-img" accept="image/*"/></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="ban-cancel">取消</button>
+      <button class="btn btn-primary" id="ban-save">保存并推送 💌</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+
+  // 回填已有数据
+  const ta = overlay.querySelector('#ban-msg');
+  if (ta && banner.message) ta.value = banner.message;
+
+  // 关闭
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.querySelector('#ban-cancel').onclick = () => overlay.remove();
+
+  // 保存 — 函数在 remove 之前读值
+  overlay.querySelector('#ban-save').onclick = async () => {
+    const msg = overlay.querySelector('#ban-msg')?.value?.trim() || '';
+    let img = banner.image_url || '';
+    const file = overlay.querySelector('#ban-img')?.files?.[0];
+
+    overlay.remove(); // 先关弹窗
+
+    if (file) {
+      try {
+        const sb = getSupabase();
+        const fn = `banner-${Date.now()}.${file.name.split('.').pop()}`;
+        await sb.storage.from('dish-images').upload(fn, file, { cacheControl: '3600', upsert: false });
+        img = sb.storage.from('dish-images').getPublicUrl(fn).data.publicUrl;
+      } catch (e) { toast('图片上传失败', 'error'); return; }
+    }
+
+    const sb = getSupabase();
+    const { error } = await sb.from('banner').upsert({ id: 1, message: msg, image_url: img }, { onConflict: 'id' });
+    if (error) { toast('保存失败: ' + error.message, 'error'); return; }
+    await renderBanner();
+    toast('已推送 💌', 'success');
+  };
 }
 
 // ===== Sidebar =====
