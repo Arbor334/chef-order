@@ -16,6 +16,10 @@ export const CONFIG = {
   // 火锅特殊分类（标识用）
   HOTPOT_CATEGORY: '火锅',
 
+  // 三餐
+  MEAL_TYPES: ['breakfast', 'lunch', 'dinner'],
+  MEAL_LABELS: { breakfast: '🌅 早餐', lunch: '☀️ 午餐', dinner: '🌙 晚餐' },
+
   // 订单状态
   ORDER_STATUSES: ['pending', 'cooking', 'done', 'cancelled'],
   STATUS_LABELS: { pending: '待做', cooking: '做菜中', done: '已完成', cancelled: '已取消' },

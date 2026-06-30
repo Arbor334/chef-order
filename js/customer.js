@@ -164,7 +164,10 @@ async function showCartModal() {
     <input class="cart-note" data-idx="${i}" type="text" placeholder="备注: 少辣/不要香菜..." value="${c.note}"/></div>
     <button class="cart-remove" data-idx="${i}">✕</button></div>`).join('');
   const sum = cart.reduce((s, c) => s + (c.dish.price || 0), 0);
-  const r = await modal('🛒 购物车', `<div class="cart-list">${html}</div><div class="cart-summary">共 ${cart.length} 道 · ¥${sum}</div>`,
+  const mealHtml = CONFIG.MEAL_TYPES.map(m => `<label class="meal-radio"><input type="radio" name="meal-type" value="${m}" ${m==='dinner'?'checked':''}/> <span>${CONFIG.MEAL_LABELS[m]}</span></label>`).join('');
+  const r = await modal('🛒 购物车', `<div class="cart-list">${html}</div>
+    <div class="meal-select"><div class="meal-label">这顿是：</div><div class="meal-options">${mealHtml}</div></div>
+    <div class="cart-summary">共 ${cart.length} 道 · ¥${sum}</div>`,
     [{ text: '继续加', value: 'cancel' }, { text: '确认下单 🍳', value: 'ok', cls: 'btn-primary' }]);
   document.querySelectorAll('.cart-note').forEach(inp => { const i = parseInt(inp.dataset.idx); if (cart[i]) cart[i].note = inp.value.trim(); });
   document.querySelectorAll('.cart-remove').forEach(b => { b.addEventListener('click', () => { const i = parseInt(b.dataset.idx); cart.splice(i, 1); document.querySelector('.modal-overlay')?.remove(); updateCartBar(); if (cart.length) showCartModal(); else renderDishList(activeCat); }); });
@@ -175,7 +178,8 @@ async function showCartModal() {
 async function submitOrder() {
   if (!cart.length) return;
   const sb = getSupabase(), user = getUser();
-  const orders = cart.map(c => ({ dish_id: c.dish_id, customer_id: user.id, status: 'pending', note: c.note || null }));
+  const mealType = document.querySelector('input[name="meal-type"]:checked')?.value || 'dinner';
+  const orders = cart.map(c => ({ dish_id: c.dish_id, customer_id: user.id, status: 'pending', note: c.note || null, meal_type: mealType }));
   const { error } = await sb.from('orders').insert(orders);
   if (error) { toast('下单失败', 'error'); return; }
   const newFavs = orders.map(o => o.dish_id).filter(id => !store.favorites.has(id));
