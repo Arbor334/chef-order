@@ -36,73 +36,61 @@
 
   <!-- ============================== Chef Home ============================== -->
   <div id="page-chef" class="page hidden">
-    <div class="page-head">
-      <h2>👨‍🍳 我的菜单</h2>
-      <div class="head-actions">
-        <button id="chef-pending-btn" class="chef-pending">
-          订单 <span id="chef-pending-count" class="nav-badge">0</span>
-        </button>
-        <button id="chef-logout">退出</button>
+    <div class="top-bar">
+      <div class="top-bar-mascot">👨‍🍳</div>
+      <div class="top-bar-text">
+        <div class="top-bar-title">我的菜单</div>
+        <div class="top-bar-sub">今天想让客人们吃点什么？</div>
+      </div>
+      <div class="top-bar-actions">
+        <button id="chef-banner-edit" class="top-bar-btn">📢</button>
+        <button id="chef-pending-btn" class="top-bar-btn">订单<span id="chef-pending-count" class="badge">0</span></button>
+        <button id="chef-logout" class="top-bar-btn">退出</button>
       </div>
     </div>
-    <div id="chef-banner-bar" class="chef-banner-bar" style="display:none">
-      <span class="chef-banner-icon">📢</span>
-      <span id="chef-banner-text" class="chef-banner-text">点此设置今日留言...</span>
-      <button id="chef-banner-edit" class="chef-banner-edit">✏️</button>
+    <div class="layout-split">
+      <div class="cat-sidebar" id="chef-sidebar"></div>
+      <div class="dish-main" id="chef-main"></div>
     </div>
-    <div id="chef-list" style="padding-bottom:80px"></div>
-    <button id="chef-fab" class="fab">+</button>
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-nav="chef"><span class="nav-icon">📋</span>菜单</button>
+      <button class="nav-item" data-nav="orders"><span class="nav-icon">📊</span>订单</button>
+    </nav>
+    <button id="chef-fab" class="fab" style="bottom:70px;">+</button>
   </div>
 
   <!-- ============================== Customer Home ============================== -->
   <div id="page-customer" class="page hidden">
-    <!-- Banner Hero -->
     <div id="cust-banner" class="banner-hero">
       <div class="banner-bg" id="cust-banner-bg"></div>
       <div class="banner-text" id="cust-banner-msg">今天想吃点什么？</div>
     </div>
-    <!-- 双栏布局 -->
     <div id="cust-layout" class="layout-split">
       <div class="cat-sidebar" id="cust-sidebar"></div>
       <div class="dish-main">
-        <div id="cust-grid-section" class="grid-section">
-          <div id="cust-grid"></div>
-        </div>
-        <div id="cust-fav-section" class="fav-section hidden">
-          <div id="cust-fav-grid"></div>
-        </div>
+        <div id="cust-grid-section"><div id="cust-grid"></div></div>
+        <div id="cust-fav-section" class="hidden"><div id="cust-fav-grid"></div></div>
       </div>
     </div>
-    <!-- 购物车 -->
     <div class="cart-bar" id="cust-cart-bar">
-      <div class="cart-info">
-        <div class="cart-label">已选菜品</div>
-        <div class="cart-detail" id="cust-cart-detail">点击菜品加入</div>
+      <div class="cart-bar-icon">🛒<span class="count" id="cust-cart-count">0</span></div>
+      <div class="cart-bar-info">
+        <div class="cart-bar-total" id="cust-cart-total">¥0</div>
+        <div class="cart-bar-detail" id="cust-cart-detail">空空如也 🥲</div>
       </div>
-      <span id="cust-cart-count" class="cart-badge">0</span>
-      <button id="cust-cart-btn" class="btn btn-primary">下单</button>
-      <button id="cust-submit" style="display:none;"></button>
+      <button class="cart-bar-btn" id="cust-cart-btn">去结算</button>
+      <button id="cust-submit" style="display:none"></button>
     </div>
   </div>
 
   <!-- ============================== Orders Board (Shared) ============================== -->
   <div id="page-orders" class="page hidden">
-    <div class="page-head">
-      <h2>📋 订单看板</h2>
-      <button id="orders-back">← 返回</button>
+    <div class="top-bar">
+      <button id="orders-back" style="font-size:20px;padding:4px 8px;">←</button>
+      <div class="top-bar-text"><div class="top-bar-title">📋 订单看板</div></div>
     </div>
     <div id="order-board" style="padding-bottom:20px"></div>
   </div>
-
-  <!-- ============================== Bottom Nav ============================== -->
-  <nav class="bottom-nav" id="bottom-nav" style="display:none">
-    <button class="nav-item active" data-nav="chef">
-      <span class="nav-icon">📋</span>菜单
-    </button>
-    <button class="nav-item" data-nav="orders">
-      <span class="nav-icon">📊</span>订单
-    </button>
-  </nav>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -179,19 +167,17 @@ window.addEventListener('DOMContentLoaded', async () => {
     return page;
   });
 
-  // 底部导航
-  document.getElementById('bottom-nav').addEventListener('click', e => {
+  // 底部导航（厨师页内）
+  document.querySelector('#page-chef .bottom-nav').addEventListener('click', e => {
     const item = e.target.closest('.nav-item');
     if (!item) return;
-    const nav = item.dataset.nav;
-    navigate(nav);
+    navigate(item.dataset.nav);
   });
 
   // 厨师端跳转订单
   document.getElementById('chef-pending-btn').addEventListener('click', () => navigate('orders'));
   document.getElementById('orders-back').addEventListener('click', () => {
-    const role = getProfile()?.role;
-    navigate(role === 'chef' ? 'chef' : 'customer');
+    navigate(getProfile()?.role === 'chef' ? 'chef' : 'customer');
   });
   document.getElementById('chef-logout').addEventListener('click', signOut);
 

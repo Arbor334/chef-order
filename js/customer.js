@@ -1,5 +1,5 @@
 // ============================================================
-// 对象端 v4 — 双栏布局 + Banner + 垂直分类侧栏
+// 对象端 v5 — 美团风格：Banner+侧栏+大图卡片+价格+购物车栏
 // ============================================================
 import { CONFIG } from '../config.js';
 import { getSupabase, getUser } from './supabase.js';
@@ -7,269 +7,159 @@ import { store, loadDishes, loadFavorites, loadBanner, emit } from './store.js';
 import { toast, modal } from './ui.js';
 import { DISH_EMOJI, catGradient } from './shared.js';
 
-let cart = [];
-let activeCat = CONFIG.CATEGORIES[0];
-let sidebarEl, gridEl, favGridEl, favSection, gridSection;
+let cart = [], activeCat = CONFIG.CATEGORIES[0];
 
 export async function initCustomerPage() {
   const user = getUser();
-  sidebarEl = document.getElementById('cust-sidebar');
-  gridEl = document.getElementById('cust-grid');
-  favGridEl = document.getElementById('cust-fav-grid');
-  favSection = document.getElementById('cust-fav-section');
-  gridSection = document.getElementById('cust-grid-section');
-
-  await loadDishes();
-  await loadFavorites(user.id);
+  await loadDishes(); await loadFavorites(user.id);
   await renderBanner();
-  // 动态设置 banner 高度
-  const bannerEl = document.getElementById('cust-banner');
-  if (bannerEl) {
-    const h = bannerEl.offsetHeight;
-    document.documentElement.style.setProperty('--banner-h', h + 'px');
-  }
-  renderSidebar();
-  renderDishList(activeCat);
+  const be = document.getElementById('cust-banner');
+  if(be) document.documentElement.style.setProperty('--banner-h', be.offsetHeight+'px');
+  renderSidebar(); renderDishList(activeCat); updateCartBar();
 
-  // 侧栏点击
-  sidebarEl.addEventListener('click', e => {
+  document.getElementById('cust-sidebar').addEventListener('click', e => {
     const item = e.target.closest('.sidebar-cat');
-    if (!item) return;
-    activeCat = item.dataset.cat;
-    renderSidebar();
-    renderDishList(activeCat);
-    favSection.classList.add('hidden');
-    gridSection.classList.remove('hidden');
+    if(!item)return; activeCat = item.dataset.cat;
+    renderSidebar(); renderDishList(activeCat);
+    document.getElementById('cust-fav-section').classList.add('hidden');
+    document.getElementById('cust-grid-section').classList.remove('hidden');
   });
 
-  // 收藏
-  document.getElementById('cust-fav-tab').addEventListener('click', () => {
-    renderFavorites();
-    favSection.classList.remove('hidden');
-    gridSection.classList.add('hidden');
-    sidebarEl.querySelectorAll('.sidebar-cat').forEach(c => c.classList.remove('active'));
+  const gridEl = document.getElementById('cust-grid');
+  gridEl.addEventListener('click', e => {
+    const add = e.target.closest('.cust-card-add');
+    const card = e.target.closest('.cust-card');
+    if(!card)return; const id = card.dataset.id;
+    const dish = store.dishes.find(d=>d.id===id); if(!dish)return;
+    if(add){toggleCart(dish);return;} showDishDetail(dish);
   });
 
-  // 菜品列表事件
-  gridEl.addEventListener('click', handleDishClick);
-  favGridEl.addEventListener('click', handleDishClick);
-
-  document.getElementById('cust-cart-btn').addEventListener('click', () => showCartModal());
+  document.getElementById('cust-cart-btn').addEventListener('click', ()=>showCartModal());
   document.getElementById('cust-submit').addEventListener('click', submitOrder);
-  updateCartBadge();
 }
 
-// ==================== Banner ====================
+// ===== Banner =====
 async function renderBanner() {
-  try {
-    const banner = await loadBanner();
-    const msgEl = document.getElementById('cust-banner-msg');
-    const bgEl = document.getElementById('cust-banner-bg');
-    if (msgEl) msgEl.textContent = banner.message || '今天想吃点什么？';
-    if (bgEl && banner.image_url) {
-      bgEl.style.backgroundImage = `url(${banner.image_url})`;
-      bgEl.classList.add('has-bg');
-    }
-  } catch (_) {}
+  try{
+    const b = await loadBanner();
+    document.getElementById('cust-banner-msg').textContent = b.message||'今天想吃点什么？';
+    const bg = document.getElementById('cust-banner-bg');
+    if(b.image_url){bg.style.backgroundImage=`url(${b.image_url})`;bg.classList.add('has-bg');}
+  }catch(_){}
 }
 
-// ==================== 侧栏 ====================
+// ===== Sidebar =====
 function renderSidebar() {
-  sidebarEl.innerHTML = CONFIG.CATEGORIES.map(c => {
-    const icon = CONFIG.CATEGORY_ICONS[c] || '🍽️';
-    const count = store.dishes.filter(d => d.category === c).length;
-    const isHotpot = c === CONFIG.HOTPOT_CATEGORY;
-    return `<div class="sidebar-cat ${c === activeCat ? 'active' : ''} ${isHotpot ? 'hotpot' : ''}" data-cat="${c}">
-      <span class="sidebar-cat-icon">${icon}</span>
-      <span class="sidebar-cat-name">${c.replace('猪肉','猪').replace('牛肉','牛').replace('羊肉','羊').replace('鸡肉','鸡').replace('素菜','素').replace('海鲜','海鲜').replace('火锅','火锅').replace('汤品','汤').replace('凉菜','凉').replace('主食','主食').replace('小吃','小吃').replace('饮品','饮')}</span>
-      ${count > 0 ? `<span class="sidebar-cat-count">${count}</span>` : ''}
+  document.getElementById('cust-sidebar').innerHTML = CONFIG.CATEGORIES.map(c => {
+    const count = store.dishes.filter(d=>d.category===c).length;
+    return `<div class="sidebar-cat ${c===activeCat?'active':''}" data-cat="${c}">
+      <span class="sidebar-cat-icon">${CONFIG.CATEGORY_ICONS[c]||'🍽️'}</span>
+      <span class="sidebar-cat-name">${c}</span>
+      ${count>0?`<span class="sidebar-cat-count">${count}</span>`:''}
     </div>`;
   }).join('');
 }
 
-// ==================== 菜品列表 ====================
+// ===== Dish List =====
 function renderDishList(cat) {
-  const dishes = store.dishes.filter(d => d.category === cat);
+  const el = document.getElementById('cust-grid');
+  const dishes = store.dishes.filter(d=>d.category===cat);
+  if(!dishes.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">📭</div><div>暂无菜品</div></div>`;return;}
   const isHotpot = cat === CONFIG.HOTPOT_CATEGORY;
-
-  if (!dishes.length) {
-    gridEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div>暂无菜品</div></div>`;
-    return;
-  }
-
-  const banner = isHotpot ? `
-    <div class="hotpot-banner">
-      <span class="hb-icon">🔥</span>
-      <span>火锅食材自由搭配</span>
-    </div>` : '';
-
-  gridEl.innerHTML = banner + `<div class="dish-list">${dishes.map(d => renderDishCard(d)).join('')}</div>`;
+  const banner = isHotpot ? `<div class="hotpot-banner"><span class="hb-icon">🔥</span>火锅食材自由搭配</div>` : '';
+  el.innerHTML = banner + `<div class="dish-list">${dishes.map(renderCustCard).join('')}</div>`;
 }
 
-function renderFavorites() {
-  const favs = store.dishes.filter(d => store.favorites.has(d.id));
-  if (!favs.length) {
-    favGridEl.innerHTML = `<div class="empty-state"><div class="empty-icon">❤️</div><div>还没有收藏<br><span style="font-size:12px;">点过的菜会自动收藏</span></div></div>`;
-    return;
-  }
-  favGridEl.innerHTML = `<div class="dish-list">${favs.map(d => renderDishCard(d)).join('')}</div>`;
-}
-
-function renderDishCard(d) {
-  const inCart = cart.some(c => c.dish_id === d.id);
-  const emoji = DISH_EMOJI[d.name] || CONFIG.CATEGORY_ICONS[d.category] || '🍽️';
+function renderCustCard(d) {
+  const inCart = cart.some(c=>c.dish_id===d.id);
+  const emoji = DISH_EMOJI[d.name]||CONFIG.CATEGORY_ICONS[d.category]||'🍽️';
   const hasImg = d.image_url && d.image_url.length > 10;
   const gradient = catGradient(d.category);
-  const steps = d.steps ? d.steps.split('\n').filter(s => s.trim()) : [];
-  const ingr = d.ingredients ? d.ingredients.split(',').map(s => s.trim()).filter(Boolean) : [];
-
-  return `
-    <div class="dish-card ${inCart ? 'in-cart' : ''}" data-id="${d.id}">
-      <div class="dish-card-img" style="background:${gradient};">
-        ${hasImg ? `<img src="${d.image_url}" alt="${d.name}"/>` : `<span style="font-size:38px;">${emoji}</span>`}
+  const rating = (4.0 + Math.random()*1.0).toFixed(1);
+  return `<div class="cust-card" data-id="${d.id}">
+    <div class="cust-card-img" style="background:${gradient};">
+      ${hasImg ? `<img src="${d.image_url}" alt="${d.name}"/>` : emoji}
+    </div>
+    <div class="cust-card-body">
+      <div class="cust-card-title">${d.name}</div>
+      <div class="cust-card-info">
+        <span class="cust-card-time">⏱ ${d.cooking_time||15}分钟</span>
+        <span class="cust-card-rating">⭐ ${rating}</span>
       </div>
-      <div class="dish-card-body">
-        <div class="dish-card-title">${d.name}</div>
-        <div class="dish-card-tags">
-          ${steps.length ? `<span class="dish-card-tag steps">📝 ${steps.length}步</span>` : ''}
-          ${ingr.length ? `<span class="dish-card-tag">🛒 ${ingr.length}种</span>` : ''}
-        </div>
-        <div class="dish-card-bottom">
-          <span class="dish-card-time">⏱ ${d.cooking_time || 15}min</span>
-          <button class="dish-card-add ${inCart ? 'in-cart' : ''}">${inCart ? '✓' : '+'}</button>
-        </div>
+      <div class="cust-card-bottom">
+        <span class="cust-card-price">${d.price?`¥${d.price}<span class="unit">/份</span>`:''}</span>
+        <button class="cust-card-add ${inCart?'in-cart':''}">${inCart?'✓':'+'}</button>
       </div>
-    </div>`;
+    </div>
+  </div>`;
 }
 
-function handleDishClick(e) {
-  const addBtn = e.target.closest('.dish-card-add');
-  const card = e.target.closest('.dish-card');
-  if (!card) return;
-  const id = card.dataset.id;
-  const dish = store.dishes.find(d => d.id === id);
-  if (!dish) return;
-  if (addBtn) { toggleCartItem(dish); return; }
-  showDishDetail(dish);
-}
-
-// ==================== 详情 ====================
+// ===== Detail =====
 function showDishDetail(dish) {
-  const steps = dish.steps ? dish.steps.split('\n').filter(s => s.trim()) : [];
-  const ingr = dish.ingredients ? dish.ingredients.split(',').map(s => s.trim()).filter(Boolean) : [];
-  const emoji = DISH_EMOJI[dish.name] || CONFIG.CATEGORY_ICONS[dish.category] || '🍽️';
-  const inCart = cart.some(c => c.dish_id === dish.id);
-  const hasImg = dish.image_url && dish.image_url.length > 10;
-
-  const imgHtml = hasImg
-    ? `<div class="dish-detail-img" style="background-image:url(${dish.image_url});background-size:cover;"></div>`
-    : `<div class="dish-detail-img" style="background:${catGradient(dish.category)};">${emoji}</div>`;
-
-  const html = `
-    ${imgHtml}
+  const steps = dish.steps?dish.steps.split('\n').filter(s=>s.trim()):[];
+  const ingr = dish.ingredients?dish.ingredients.split(',').map(s=>s.trim()).filter(Boolean):[];
+  const inCart = cart.some(c=>c.dish_id===dish.id);
+  const hasImg = dish.image_url&&dish.image_url.length>10;
+  const emoji = DISH_EMOJI[dish.name]||'🍽️';
+  const rating = (4.0+Math.random()*1.0).toFixed(1);
+  const html = `${hasImg?`<div class="dish-detail-img" style="background-image:url(${dish.image_url});background-size:cover;"></div>`:`<div class="dish-detail-img" style="background:${catGradient(dish.category)};">${emoji}</div>`}
     <div class="dish-detail-name">${dish.name}</div>
     <div class="dish-detail-meta">
       <span class="dish-detail-tag">${dish.category}</span>
-      <span class="dish-detail-tag time">⏱ ${dish.cooking_time || 15} 分钟</span>
-      ${inCart ? '<span class="dish-detail-tag" style="background:var(--acd);color:var(--ac);">已在购物车 ✓</span>' : ''}
+      <span class="dish-detail-tag" style="background:var(--acd);color:var(--ac);">⏱ ${dish.cooking_time||15}min</span>
+      <span class="dish-detail-tag" style="color:var(--star);">⭐ ${rating}</span>
+      ${dish.price?`<span class="dish-detail-tag" style="color:var(--danger);font-weight:700;">¥${dish.price}</span>`:''}
+      ${inCart?'<span class="dish-detail-tag" style="background:var(--acd);color:var(--ac);">已在购物车</span>':''}
     </div>
-    ${ingr.length ? `
-    <div class="dish-detail-section"><h4>🛒 食材清单</h4>
-    <div class="ingredient-chips">${ingr.map(i => `<span class="ingredient-chip">${i}</span>`).join('')}</div></div>` : ''}
-    ${steps.length ? `
-    <div class="dish-detail-section"><h4>📝 做菜步骤</h4>
-    <ol class="dish-detail-steps">${steps.map(s => `<li>${s}</li>`).join('')}</ol></div>` : ''}
-  `;
-
-  const btnText = inCart ? '移除 ✕' : '➕ 我要点这个';
-  const btnCls = inCart ? 'btn-outline' : 'btn-primary';
+    ${ingr.length?`<div class="dish-detail-section"><h4>🛒 食材</h4><div class="ingredient-chips">${ingr.map(i=>`<span class="ingredient-chip">${i}</span>`).join('')}</div></div>`:''}
+    ${steps.length?`<div class="dish-detail-section"><h4>📝 步骤</h4><ol class="dish-detail-steps">${steps.map(s=>`<li>${s}</li>`).join('')}</ol></div>`:''}`;
   modal(dish.name, html, [
-    { text: '关闭', value: 'close' },
-    { text: btnText, value: 'toggle', cls: btnCls }
-  ]).then(action => { if (action === 'toggle') toggleCartItem(dish); });
+    {text:'关闭',value:'close'},
+    {text:inCart?'移除':'➕ 我要点这个',value:'toggle',cls:inCart?'btn-outline':'btn-primary'}
+  ]).then(a=>{if(a==='toggle')toggleCart(dish);});
 }
 
-// ==================== 购物车 ====================
-function toggleCartItem(dish) {
-  const idx = cart.findIndex(c => c.dish_id === dish.id);
-  if (idx >= 0) { cart.splice(idx, 1); toast(`已移除「${dish.name}」`); }
-  else { cart.push({ dish_id: dish.id, dish, note: '' }); toast(`已加入「${dish.name}」 ✅`, 'success'); }
-  updateCartBadge();
-  refreshView();
+// ===== Cart =====
+function toggleCart(dish) {
+  const idx = cart.findIndex(c=>c.dish_id===dish.id);
+  if(idx>=0){cart.splice(idx,1);toast(`已移除「${dish.name}」`);}
+  else{cart.push({dish_id:dish.id,dish,note:''});toast(`已加入「${dish.name}」✅`,'success');}
+  updateCartBar(); renderDishList(activeCat);
 }
 
-function refreshView() {
-  if (!favSection.classList.contains('hidden')) renderFavorites();
-  else renderDishList(activeCat);
-}
-
-function updateCartBadge() {
+function updateCartBar() {
   const count = document.getElementById('cust-cart-count');
+  const total = document.getElementById('cust-cart-total');
   const detail = document.getElementById('cust-cart-detail');
   count.textContent = cart.length;
-  count.style.display = cart.length > 0 ? 'inline-flex' : 'none';
-  const names = cart.map(c => c.dish.name).join('、');
-  detail.textContent = cart.length > 0 ? `已选 ${cart.length} 道: ${names}` : '点击菜品加入';
+  count.style.display = cart.length>0?'flex':'none';
+  const sum = cart.reduce((s,c)=>s+(c.dish.price||0),0);
+  total.textContent = `¥${sum}`;
+  detail.textContent = cart.length>0?`已选 ${cart.length} 道`:'空空如也 🥲';
 }
 
 async function showCartModal() {
-  if (!cart.length) { toast('还没有选菜哦', 'info'); return; }
-
-  const listHtml = cart.map((c, i) => `
-    <div class="cart-item">
-      <div class="cart-info">
-        <div class="cart-name">${c.dish.name} <span class="cart-time">⏱${c.dish.cooking_time || 15}min</span></div>
-        <input class="cart-note" data-idx="${i}" type="text" placeholder="备注: 少辣 / 不要香菜..." value="${c.note}"/>
-      </div>
-      <button class="cart-remove" data-idx="${i}">✕</button>
-    </div>
-  `).join('');
-
-  const totalTime = cart.reduce((s, c) => s + (c.dish.cooking_time || 15), 0);
-  const result = await modal('🛒 我的点菜单', `
-    <div class="cart-list">${listHtml}</div>
-    <div class="cart-summary">共 ${cart.length} 道 · 预计 ${totalTime} 分钟</div>
-  `, [
-    { text: '继续加菜', value: 'cancel' },
-    { text: '确认下单 🍳', value: 'confirm', cls: 'btn-primary' }
-  ]);
-
-  document.querySelectorAll('.cart-note').forEach(input => {
-    const idx = parseInt(input.dataset.idx);
-    if (cart[idx]) cart[idx].note = input.value.trim();
-  });
-  document.querySelectorAll('.cart-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.idx);
-      cart.splice(idx, 1);
-      document.querySelector('.modal-overlay')?.remove();
-      updateCartBadge();
-      if (cart.length) showCartModal(); else refreshView();
-    });
-  });
-
-  if (result !== 'confirm') return;
+  if(!cart.length){toast('还没选菜','info');return;}
+  const html = cart.map((c,i)=>`<div class="cart-item">
+    <div class="cart-info"><div class="cart-name">${c.dish.name} <span class="cart-time">⏱${c.dish.cooking_time||15}min · ¥${c.dish.price||0}</span></div>
+    <input class="cart-note" data-idx="${i}" type="text" placeholder="备注: 少辣/不要香菜..." value="${c.note}"/></div>
+    <button class="cart-remove" data-idx="${i}">✕</button></div>`).join('');
+  const sum = cart.reduce((s,c)=>s+(c.dish.price||0),0);
+  const r = await modal('🛒 购物车', `<div class="cart-list">${html}</div><div class="cart-summary">共 ${cart.length} 道 · ¥${sum}</div>`,
+    [{text:'继续加',value:'cancel'},{text:'确认下单 🍳',value:'ok',cls:'btn-primary'}]);
+  document.querySelectorAll('.cart-note').forEach(inp=>{const i=parseInt(inp.dataset.idx);if(cart[i])cart[i].note=inp.value.trim();});
+  document.querySelectorAll('.cart-remove').forEach(b=>{b.addEventListener('click',()=>{const i=parseInt(b.dataset.idx);cart.splice(i,1);document.querySelector('.modal-overlay')?.remove();updateCartBar();if(cart.length)showCartModal();else renderDishList(activeCat);});});
+  if(r!=='ok')return;
   document.getElementById('cust-submit').click();
 }
 
 async function submitOrder() {
-  if (!cart.length) return;
-  const sb = getSupabase();
-  const user = getUser();
-  const orders = cart.map(c => ({ dish_id: c.dish_id, customer_id: user.id, status: 'pending', note: c.note || null }));
-  const { error } = await sb.from('orders').insert(orders);
-  if (error) { toast('下单失败: ' + error.message, 'error'); return; }
-
-  const newFavIds = orders.map(o => o.dish_id).filter(id => !store.favorites.has(id));
-  if (newFavIds.length) {
-    await sb.from('favorites').upsert(newFavIds.map(dish_id => ({ user_id: user.id, dish_id })), { onConflict: 'user_id,dish_id', ignoreDuplicates: true });
-    newFavIds.forEach(id => store.favorites.add(id));
-  }
-
-  cart = [];
-  updateCartBadge();
-  document.querySelector('.modal-overlay')?.remove();
-  toast('下单成功！厨师马上开始做 🍳', 'success');
-  emit('order-placed');
-  refreshView();
+  if(!cart.length)return;const sb=getSupabase(),user=getUser();
+  const orders = cart.map(c=>({dish_id:c.dish_id,customer_id:user.id,status:'pending',note:c.note||null}));
+  const {error}=await sb.from('orders').insert(orders);
+  if(error){toast('下单失败','error');return;}
+  const newFavs = orders.map(o=>o.dish_id).filter(id=>!store.favorites.has(id));
+  if(newFavs.length){await sb.from('favorites').upsert(newFavs.map(dish_id=>({user_id:user.id,dish_id})),{onConflict:'user_id,dish_id',ignoreDuplicates:true});newFavs.forEach(id=>store.favorites.add(id));}
+  cart=[];updateCartBar();document.querySelector('.modal-overlay')?.remove();
+  toast('下单成功！厨师马上开始做 🍳','success');emit('order-placed');renderDishList(activeCat);
 }
