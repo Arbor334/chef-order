@@ -72,13 +72,19 @@ async function showBannerForm() {
   const html = `<div class="form-g"><label>今天想对她说什么</label><textarea id="bn-msg" rows="3" placeholder="比如：今天做了红烧肉~">${banner.message||''}</textarea></div>
     <div class="form-g"><label>背景图</label><input type="file" id="bn-img" accept="image/*"/>${banner.image_url?`<div class="form-img-preview"><img src="${banner.image_url}"/></div>`:''}</div>`;
   const result = await modal('📢 每日示爱', html, [{ text: '取消', value: 'no' }, { text: '保存并推送 💌', value: 'ok', cls: 'btn-primary' }]);
-  if (result.value !== 'ok') { result.overlay.remove(); return; }
+  // 必须在 remove 之前读取表单
   const msg = result.overlay.querySelector('#bn-msg')?.value?.trim() || '';
   let img = banner.image_url || '';
   const f = result.overlay.querySelector('#bn-img')?.files?.[0];
   result.overlay.remove();
-  if (f) { try { img = await uploadImage(f); } catch (e) { toast('上传失败', 'error'); return; } }
-  await getSupabase().from('banner').upsert({ id: 1, message: msg, image_url: img }, { onConflict: 'id' });
+  if (result.value !== 'ok') return;
+  console.log('[banner] saving:', msg, f?.name, img);
+  if (f) { try { img = await uploadImage(f); } catch (e) { toast('上传失败','error'); return; } }
+  const sb = getSupabase();
+  // 先删后插，避免 upsert 冲突问题
+  await sb.from('banner').delete().neq('id', 0);
+  const { error } = await sb.from('banner').insert({ id: 1, message: msg, image_url: img });
+  if (error) { console.error('[banner]', error); toast('保存失败: ' + error.message, 'error'); return; }
   await renderBanner();
   toast('已推送 💌', 'success');
 }
