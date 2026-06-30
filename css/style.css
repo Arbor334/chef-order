@@ -1,0 +1,181 @@
+/* ============================================================
+   ChefOrder — 全局样式 (Light/Dark theme)
+   ============================================================ */
+
+:root {
+  /* 主题色 */
+  --ac: #ff6b35; --acd: rgba(255,107,53,.12);
+  /* Light */
+  --bg: #f5f5f5; --bg2: #fff; --bg3: #eee; --bgh: #fafafa;
+  --tx: #1a1a2e; --tx2: #555; --tx3: #999;
+  --bd: #e5e5e5; --bd2: #ddd;
+  --danger: #ef4444;
+  --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --bottom-nav-h: 0px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0f14; --bg2: #1a1a24; --bg3: #222231; --bgh: #1e1e2a;
+    --tx: #eee; --tx2: #aaa; --tx3: #666;
+    --bd: #2a2a3a; --bd2: #333;
+    --shadow: 0 2px 12px rgba(0,0,0,.3);
+  }
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:var(--bg); color:var(--tx); overflow-x:hidden; min-height:100dvh; -webkit-tap-highlight-color:transparent; }
+input, select, button, textarea { font:inherit; color:inherit; }
+button { cursor:pointer; border:none; background:none; }
+
+/* ==================== Layout ==================== */
+#app { max-width:500px; margin:0 auto; min-height:100dvh; background:var(--bg2); box-shadow:var(--shadow); position:relative; padding-bottom:calc(var(--bottom-nav-h) + 16px); }
+.page { min-height:100dvh; }
+.page.hidden { display:none; }
+
+/* ==================== Login ==================== */
+.login-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100dvh; padding:40px 24px; text-align:center; }
+.login-logo { font-size:64px; margin-bottom:12px; }
+.login-title { font-size:24px; font-weight:700; margin-bottom:4px; }
+.login-sub { font-size:14px; color:var(--tx3); margin-bottom:32px; }
+.login-form { width:100%; max-width:320px; display:flex; flex-direction:column; gap:12px; }
+.login-form input, .login-form select { width:100%; padding:12px 14px; background:var(--bg); border:1px solid var(--bd2); border-radius:var(--radius-sm); font-size:15px; outline:none; transition:border .15s; }
+.login-form input:focus,.login-form select:focus { border-color:var(--ac); }
+.login-tabs { display:flex; gap:4px; background:var(--bg3); border-radius:var(--radius-sm); padding:3px; margin-bottom:8px; }
+.login-tab { flex:1; padding:8px; border-radius:6px; font-size:13px; color:var(--tx3); transition:all .15s; }
+.login-tab.active { background:var(--ac); color:#fff; }
+
+/* ==================== Buttons ==================== */
+.btn { display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;transition:all .15s; }
+.btn-primary { background:var(--ac); color:#fff; }
+.btn-primary:hover { filter:brightness(1.1); }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-block { width:100%; }
+
+/* ==================== Bottom Nav ==================== */
+.bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:500px; display:flex; background:var(--bg2); border-top:1px solid var(--bd); z-index:100; padding:4px 0 env(safe-area-inset-bottom, 4px); }
+.bottom-nav .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; padding:8px 4px 4px; font-size:11px; color:var(--tx3); transition:color .15s; }
+.bottom-nav .nav-item.active { color:var(--ac); }
+.bottom-nav .nav-icon { font-size:22px; line-height:1; }
+.nav-badge { position:absolute; top:4px; right:calc(50% - 24px); min-width:18px; height:18px; border-radius:9px; background:var(--danger); color:#fff; font-size:10px; display:none; align-items:center; justify-content:center; font-weight:700; }
+
+/* ==================== Header ==================== */
+.page-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; position:sticky; top:0; background:var(--bg2); z-index:50; border-bottom:1px solid var(--bd); }
+.page-head h2 { font-size:18px; font-weight:700; }
+.head-actions { display:flex; gap:8px; }
+.head-actions button { font-size:13px; color:var(--ac); padding:4px 12px; border-radius:var(--radius-sm); background:var(--acd); }
+
+/* ==================== Tabs ==================== */
+.cat-tabs { display:flex; gap:6px; padding:12px 16px; overflow-x:auto; scrollbar-width:none; }
+.cat-tabs::-webkit-scrollbar { display:none; }
+.cat-tab { flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:13px; background:var(--bg3); color:var(--tx2); transition:all .15s; white-space:nowrap; }
+.cat-tab.active { background:var(--ac); color:#fff; }
+
+/* ==================== Dish Grid ==================== */
+.dish-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; padding:0 16px 16px; }
+.dish-card { background:var(--bg); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:all .15s; border:2px solid transparent; position:relative; }
+.dish-card:active { transform:scale(.97); }
+.dish-card.in-cart { border-color:var(--ac); }
+.dc-img { width:100%; padding-top:75%; background:var(--bg3) center/cover no-repeat; position:relative; }
+.dc-img-empty { display:flex; align-items:center; justify-content:center; font-size:40px; }
+.dc-check { position:absolute; top:8px; right:8px; font-size:18px; }
+.dc-body { padding:10px 12px 12px; }
+.dc-name { font-size:14px; font-weight:600; margin-bottom:4px; }
+.dc-meta { font-size:11px; color:var(--tx3); margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dc-footer { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--tx3); }
+.dc-actions { position:absolute; top:8px; right:8px; display:flex; gap:4px; }
+.dc-btn { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center; font-size:16px; }
+
+/* ==================== Chef Dish Items ==================== */
+.chef-cat-section { margin-bottom:8px; }
+.chef-cat-title { padding:12px 16px 8px; font-size:15px; color:var(--tx2); display:flex; align-items:center; gap:8px; }
+.cat-count { font-size:12px; color:var(--tx3); background:var(--bg3); padding:1px 8px; border-radius:10px; }
+.chef-dish-item { display:flex; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--bd); }
+.chef-dish-item:active { background:var(--bgh); }
+.cdi-thumb { width:48px; height:48px; border-radius:8px; background:var(--bg3) center/cover no-repeat; flex-shrink:0; }
+.cdi-thumb-empty { display:flex; align-items:center; justify-content:center; font-size:22px; }
+.cdi-info { flex:1; min-width:0; }
+.cdi-name { font-size:14px; font-weight:600; }
+.cdi-meta { font-size:11px; color:var(--tx3); margin-top:2px; }
+.cdi-btns { display:flex; gap:4px; }
+.cdi-btn { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; background:var(--bg3); }
+.cdi-btn.edit:active { background:var(--acd); color:var(--ac); }
+.cdi-btn.del:active { background:rgba(239,68,68,.12); color:var(--danger); }
+
+/* ==================== FAB ==================== */
+.fab { position:fixed; bottom:80px; right:calc(50% - 230px); width:52px; height:52px; border-radius:50%; background:var(--ac); color:#fff; font-size:28px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(255,107,53,.35); z-index:90; transition:transform .15s; }
+.fab:active { transform:scale(.92); }
+@media (max-width: 500px) { .fab { right:20px; } }
+
+/* ==================== Cart ==================== */
+.cart-bar { position:fixed; bottom:60px; left:50%; transform:translateX(-50%); width:calc(100% - 32px); max-width:468px; display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--bg2); border-radius:var(--radius); box-shadow:0 -2px 20px rgba(0,0,0,.1); z-index:90; border:1px solid var(--bd); }
+.cart-info { flex:1; }
+.cart-label { font-size:13px; font-weight:600; }
+.cart-detail { font-size:11px; color:var(--tx3); margin-top:2px; }
+.cart-badge { min-width:22px; height:22px; border-radius:11px; background:var(--danger); color:#fff; font-size:11px; font-weight:700; display:none; align-items:center; justify-content:center; }
+/* Cart modal */
+.cart-list { max-height:60vh; overflow-y:auto; }
+.cart-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--bd); }
+.cart-info { flex:1; }
+.cart-name { font-size:14px; font-weight:600; }
+.cart-time { font-size:11px; color:var(--tx3); }
+.cart-note { width:100%; margin-top:6px; padding:6px 10px; background:var(--bg3); border:1px solid var(--bd2); border-radius:var(--radius-sm); font-size:13px; outline:none; }
+.cart-note:focus { border-color:var(--ac); }
+.cart-remove { font-size:18px; color:var(--tx3); padding:4px 8px; }
+.cart-remove:active { color:var(--danger); }
+.cart-summary { text-align:center; padding:12px 0 0; font-size:14px; font-weight:600; }
+
+/* ==================== Order Board ==================== */
+.board-columns { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; padding:12px; }
+.board-col { background:var(--bg); border-radius:var(--radius); overflow:hidden; }
+.board-col-head { display:flex; align-items:center; gap:6px; padding:10px 10px 8px; font-size:13px; font-weight:600; }
+.board-col-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.board-col-count { font-size:11px; color:var(--tx3); margin-left:auto; }
+.board-col-body { padding:0 6px 8px; min-height:60px; }
+.col-empty { text-align:center; color:var(--tx3); font-size:12px; padding:12px 0; }
+.order-card { background:var(--bg2); border-radius:var(--radius-sm); padding:8px; margin-bottom:6px; cursor:pointer; border:1px solid var(--bd); transition:border .15s; display:flex; gap:8px; }
+.order-card:active { border-color:var(--ac); }
+.oc-img { width:36px; height:36px; border-radius:6px; background:var(--bg3) center/cover no-repeat; flex-shrink:0; }
+.oc-info { flex:1; min-width:0; }
+.oc-name { font-size:13px; font-weight:600; }
+.oc-note { font-size:11px; color:var(--ac); margin-top:2px; }
+.oc-time { font-size:10px; color:var(--tx3); margin-top:2px; }
+.oc-arrow { font-size:10px; color:var(--tx3); display:flex; align-items:center; }
+
+/* ==================== Modal ==================== */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:flex-end; justify-content:center; z-index:200; }
+.modal-box { width:100%; max-width:500px; max-height:85vh; background:var(--bg2); border-radius:var(--radius) var(--radius) 0 0; overflow-y:auto; }
+.modal-head { padding:16px; font-size:16px; font-weight:700; border-bottom:1px solid var(--bd); text-align:center; }
+.modal-body { padding:16px; }
+.modal-foot { display:flex; gap:8px; padding:12px 16px 20px; border-top:1px solid var(--bd); }
+.modal-foot .btn { flex:1; }
+
+/* ==================== Form ==================== */
+.form-g { margin-bottom:14px; }
+.form-g label { display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:var(--tx2); }
+.form-g input, .form-g select { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--bd2); border-radius:var(--radius-sm); font-size:14px; outline:none; }
+.form-g input:focus, .form-g select:focus { border-color:var(--ac); }
+.form-note { font-weight:400; font-size:11px; color:var(--tx3); }
+.form-img-preview { margin-top:8px; }
+.form-img-preview img { border-radius:var(--radius-sm); }
+
+/* ==================== Toast ==================== */
+.toast { position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-120px); padding:10px 24px; border-radius:20px; font-size:14px; font-weight:600; z-index:999; transition:transform .3s; color:#fff; background:#333; white-space:nowrap; max-width:90vw; overflow:hidden; text-overflow:ellipsis; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast-error { background:var(--danger); }
+.toast-info { background:var(--ac); }
+
+/* ==================== Empty / Loading ==================== */
+.empty-state { text-align:center; padding:48px 24px; color:var(--tx3); font-size:14px; }
+.empty-icon { font-size:48px; margin-bottom:12px; }
+.loading { text-align:center; padding:48px; color:var(--tx3); }
+
+/* ==================== Header tabs (order page) ==================== */
+.page-tabs { display:flex; gap:4px; padding:8px 16px; }
+.page-tab { flex:1; padding:8px; border-radius:var(--radius-sm); font-size:13px; text-align:center; color:var(--tx3); background:var(--bg3); }
+.page-tab.active { background:var(--ac); color:#fff; }
+
+/* ==================== Misc ==================== */
+.fav-section.hidden, .grid-section.hidden { display:none; }
+.chef-pending { position:relative; }
+#chef-pending-count { display:none; }

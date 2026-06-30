@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#ff6b35"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="点菜"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>"/>
+<link rel="stylesheet" href="/css/style.css"/>
+<title>ChefOrder · 专属厨房</title>
+</head>
+<body>
+<div id="app">
+  <div id="toast" class="toast"></div>
+
+  <!-- ============================== Login ============================== -->
+  <div id="page-login" class="page login-wrap">
+    <div class="login-logo">👨‍🍳</div>
+    <div class="login-title">ChefOrder</div>
+    <div class="login-sub">专属厨房点单系统</div>
+    <form class="login-form" id="login-form">
+      <div class="login-tabs">
+        <button type="button" class="login-tab active" data-role="customer">我是吃货 🙋‍♀️</button>
+        <button type="button" class="login-tab" data-role="chef">我是厨师 🧑‍🍳</button>
+      </div>
+      <input type="email" id="login-email" placeholder="邮箱" required autocomplete="email"/>
+      <input type="password" id="login-password" placeholder="密码" required autocomplete="current-password"/>
+      <input type="text" id="login-invite" placeholder="邀请码" style="display:none;" autocomplete="off"/>
+      <button type="submit" class="btn btn-primary btn-block">登录</button>
+      <button type="button" id="login-toggle" class="btn" style="font-size:12px;color:var(--tx3)">没有账号？去注册</button>
+    </form>
+  </div>
+
+  <!-- ============================== Chef Home ============================== -->
+  <div id="page-chef" class="page hidden">
+    <div class="page-head">
+      <h2>👨‍🍳 我的菜单</h2>
+      <div class="head-actions">
+        <button id="chef-pending-btn" class="chef-pending">
+          订单 <span id="chef-pending-count" class="nav-badge">0</span>
+        </button>
+        <button id="chef-logout">退出</button>
+      </div>
+    </div>
+    <div id="chef-list" style="padding-bottom:80px"></div>
+    <button id="chef-fab" class="fab">+</button>
+  </div>
+
+  <!-- ============================== Customer Home ============================== -->
+  <div id="page-customer" class="page hidden">
+    <div class="page-head">
+      <h2>🍽️ 今天吃什么</h2>
+      <div class="head-actions">
+        <button id="cust-fav-tab">❤️ 收藏</button>
+        <button id="cust-logout">退出</button>
+      </div>
+    </div>
+    <div id="cust-cats" class="cat-tabs"></div>
+    <!-- 菜品列表 -->
+    <div id="cust-grid-section" class="grid-section">
+      <div id="cust-grid" class="dish-grid"></div>
+    </div>
+    <!-- 收藏 -->
+    <div id="cust-fav-section" class="fav-section hidden">
+      <div id="cust-fav-grid" class="dish-grid"></div>
+    </div>
+    <!-- 购物车 -->
+    <div class="cart-bar" id="cust-cart-bar">
+      <div class="cart-info">
+        <div class="cart-label">已选菜品</div>
+        <div class="cart-detail" id="cust-cart-detail">点击菜品加入</div>
+      </div>
+      <span id="cust-cart-count" class="cart-badge">0</span>
+      <button id="cust-cart-btn" class="btn btn-primary">下单</button>
+      <button id="cust-submit" style="display:none;"></button>
+    </div>
+  </div>
+
+  <!-- ============================== Orders Board (Shared) ============================== -->
+  <div id="page-orders" class="page hidden">
+    <div class="page-head">
+      <h2>📋 订单看板</h2>
+      <button id="orders-back">← 返回</button>
+    </div>
+    <div id="order-board" style="padding-bottom:20px"></div>
+  </div>
+
+  <!-- ============================== Bottom Nav ============================== -->
+  <nav class="bottom-nav" id="bottom-nav" style="display:none">
+    <button class="nav-item active" data-nav="chef">
+      <span class="nav-icon">📋</span>菜单
+    </button>
+    <button class="nav-item" data-nav="orders">
+      <span class="nav-icon">📊</span>订单
+    </button>
+  </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="/js/supabase.js"></script>
+<script type="module" src="/js/store.js"></script>
+<script type="module" src="/js/ui.js"></script>
+<script type="module" src="/js/router.js"></script>
+<script type="module" src="/js/chef.js"></script>
+<script type="module" src="/js/customer.js"></script>
+<script type="module" src="/js/orders.js"></script>
+<script type="module">
+// ============================================================
+// App 入口 — 路由分发 + 认证 + 初始化
+// ============================================================
+import { CONFIG } from '/config.js';
+import { initAuth, signUp, signIn, signOut, onAuthChange, getUser, getProfile } from '/js/supabase.js';
+import { initRouter, navigate, route } from '/js/router.js';
+import { initChefPage } from '/js/chef.js';
+import { initCustomerPage } from '/js/customer.js';
+import { initOrdersPage } from '/js/orders.js';
+import { toast } from '/js/ui.js';
+import { loadOrders, subscribeOrders } from '/js/store.js';
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const isConfigured = !CONFIG.SUPABASE_URL.includes('YOUR_');
+  if (!isConfigured) {
+    document.getElementById('app').innerHTML = `
+      <div class="login-wrap">
+        <div class="login-logo">⚙️</div>
+        <div class="login-title">需要配置 Supabase</div>
+        <div class="login-sub" style="text-align:left;max-width:380px;line-height:1.8;">
+          <p>1. 打开 <a href="https://supabase.com" target="_blank">supabase.com</a> 创建免费项目</p>
+          <p>2. 在 SQL Editor 中运行下面的建表语句</p>
+          <p>3. 复制项目的 URL 和 anon key</p>
+          <p>4. 填入 <code>config.js</code> 的 SUPABASE_URL 和 SUPABASE_ANON_KEY</p>
+          <p>5. 刷新页面</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // 注册 PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+
+  // 初始化认证
+  await initAuth();
+  const user = getUser();
+  const profile = getProfile();
+
+  // 定义路由
+  route('chef', async () => {
+    document.getElementById('bottom-nav').style.display = 'flex';
+    const nav = document.querySelectorAll('.bottom-nav .nav-item');
+    nav.forEach(n => n.classList.toggle('active', n.dataset.nav === 'chef'));
+    const page = document.getElementById('page-chef');
+    await initChefPage();
+    return page;
+  });
+
+  route('customer', async () => {
+    document.getElementById('bottom-nav').style.display = 'none';
+    document.getElementById('cust-logout').addEventListener('click', signOut);
+    const page = document.getElementById('page-customer');
+    await initCustomerPage();
+    return page;
+  });
+
+  route('orders', async () => {
+    const page = document.getElementById('page-orders');
+    await initOrdersPage();
+    return page;
+  });
+
+  // 底部导航
+  document.getElementById('bottom-nav').addEventListener('click', e => {
+    const item = e.target.closest('.nav-item');
+    if (!item) return;
+    const nav = item.dataset.nav;
+    navigate(nav);
+  });
+
+  // 厨师端跳转订单
+  document.getElementById('chef-pending-btn').addEventListener('click', () => navigate('orders'));
+  document.getElementById('orders-back').addEventListener('click', () => {
+    const role = getProfile()?.role;
+    navigate(role === 'chef' ? 'chef' : 'customer');
+  });
+  document.getElementById('chef-logout').addEventListener('click', signOut);
+
+  // ----------------------------------------
+  // 登录/注册表单
+  // ----------------------------------------
+  let authMode = 'login';
+  let selectedRole = 'customer';
+  const form = document.getElementById('login-form');
+  const toggleBtn = document.getElementById('login-toggle');
+  const tabs = document.querySelectorAll('.login-tab');
+  const inviteInput = document.getElementById('login-invite');
+
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(tb => tb.classList.remove('active'));
+    t.classList.add('active');
+    selectedRole = t.dataset.role;
+  }));
+
+  toggleBtn.addEventListener('click', () => {
+    authMode = authMode === 'login' ? 'register' : 'login';
+    toggleBtn.textContent = authMode === 'login' ? '没有账号？去注册' : '已有账号？去登录';
+    inviteInput.style.display = authMode === 'register' ? 'block' : 'none';
+    inviteInput.placeholder = '邀请码';
+    form.querySelector('button[type=submit]').textContent = authMode === 'register' ? '注册' : '登录';
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const inviteCode = inviteInput.value.trim();
+
+    if (!email || !password) { toast('请填写邮箱和密码', 'error'); return; }
+
+    try {
+      if (authMode === 'register') {
+        await signUp(email, password, selectedRole, inviteCode);
+        toast('注册成功！请检查邮箱确认链接');
+      } else {
+        const profile = await signIn(email, password);
+        toast(`欢迎回来！`);
+        navigate(profile.role === 'chef' ? 'chef' : 'customer');
+      }
+    } catch (err) {
+      toast(err.message || '操作失败', 'error');
+    }
+  });
+
+  // 认证状态监听
+  onAuthChange((user, profile) => {
+    if (user && profile) {
+      navigate(profile.role === 'chef' ? 'chef' : 'customer');
+    } else if (!user) {
+      navigate('login');
+    }
+  });
+
+  // 初始化路由
+  initRouter();
+
+  // 如果已登录，直接跳转
+  if (user && profile) {
+    navigate(profile.role === 'chef' ? 'chef' : 'customer');
+  }
+});
+</script>
+</body>
+</html>
