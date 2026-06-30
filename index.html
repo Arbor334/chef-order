@@ -186,7 +186,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('orders-back').addEventListener('click', () => {
     navigate(getProfile()?.role === 'chef' ? 'chef' : 'customer');
   });
-  document.getElementById('menu-logout').addEventListener('click', signOut);
+  document.getElementById('menu-logout').addEventListener('click', () => {
+    // 重置页面状态，下次登录重新初始化
+    import('/js/chef.js').then(m => { m._chefInited = false; });
+    import('/js/customer.js').then(m => { m._cusInited = false; });
+    import('/js/orders.js').then(m => { m._ordInited = false; });
+    signOut();
+  });
 
   // ----------------------------------------
   // 登录/注册表单

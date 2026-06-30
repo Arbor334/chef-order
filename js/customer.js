@@ -8,8 +8,11 @@ import { toast, modal } from './ui.js';
 import { DISH_EMOJI, catGradient } from './shared.js';
 
 let cart = [], activeCat = CONFIG.CATEGORIES[0];
+export let _cusInited = false;
 
 export async function initCustomerPage() {
+  if (_cusInited) return;
+  _cusInited = true;
   const user = getUser();
   await loadDishes();
   await loadFavorites(user.id);

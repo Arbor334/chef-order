@@ -8,8 +8,11 @@ import { toast, modal } from './ui.js';
 import { DISH_EMOJI, catGradient } from './shared.js';
 
 let activeCat = CONFIG.CATEGORIES[0];
+export let _chefInited = false;
 
 export async function initChefPage() {
+  if (_chefInited) return;
+  _chefInited = true;
   await loadDishes();
   await loadOrders({ status: 'pending' });
   await renderChefBanner();
@@ -116,10 +119,9 @@ async function renderChefBanner() {
 }
 
 function initBannerEditor() {
-  document.getElementById('chef-banner-edit').addEventListener('click', () => showBannerForm());
-  // 点击 banner 也能编辑
-  document.getElementById('cust-banner').addEventListener('click', () => showBannerForm());
   document.getElementById('cust-banner').style.cursor = 'pointer';
+  document.getElementById('chef-banner-edit').addEventListener('click', () => showBannerForm());
+  document.getElementById('cust-banner').addEventListener('click', () => showBannerForm());
 }
 
 async function showBannerForm() {

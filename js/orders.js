@@ -8,7 +8,11 @@ import { toast } from './ui.js';
 
 let viewMode = 'board'; // board | shoplist | history
 
+export let _ordInited = false;
+
 export async function initOrdersPage() {
+  if (_ordInited) return;
+  _ordInited = true;
   const profile = getProfile();
   const boardEl = document.getElementById('order-board');
 
