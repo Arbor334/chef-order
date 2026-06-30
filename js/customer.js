@@ -109,7 +109,7 @@ function showDishDetail(dish) {
     <div class="dish-detail-meta"><span class="dish-detail-tag" style="color:var(--danger);font-weight:700;">${dish.price?'¥'+dish.price:''}</span>${inCart?'<span class="dish-detail-tag" style="background:var(--acd);color:var(--ac);">已在购物车</span>':''}</div>
     ${ingr.length?`<div class="dish-detail-section"><h4>🛒 食材</h4><div class="ingredient-chips">${ingr.map(i=>`<span class="ingredient-chip">${i}</span>`).join('')}</div></div>`:''}
     ${steps.length?`<div class="dish-detail-section"><h4>📝 步骤</h4><ol class="dish-detail-steps">${steps.map(s=>`<li>${s}</li>`).join('')}</ol></div>`:''}`;
-  modal(dish.name,html,[{text:'关闭',value:'no'},{text:inCart?'移除':'➕ 我要点',value:'ok',cls:inCart?'btn-outline':'btn-primary'}]).then(a=>{if(a==='ok')toggleCart(dish);});
+  modal(dish.name,html,[{text:'关闭',value:'no'},{text:inCart?'移除':'➕ 我要点',value:'ok',cls:inCart?'btn-outline':'btn-primary'}]).then(r=>{r.overlay.remove();if(r.value==='ok')toggleCart(dish);});
 }
 
 function toggleCart(dish) {
@@ -131,10 +131,10 @@ async function showCartModal() {
   const html=cart.map((c,i)=>`<div class="cart-item"><div class="cart-info"><div class="cart-name">${c.dish.name}<span class="cart-time">⏱${c.dish.cooking_time||15}min · ¥${c.dish.price||0}</span></div><input class="cart-note" data-idx="${i}" type="text" placeholder="备注: 少辣/不要香菜..." value="${c.note}"/></div><button class="cart-remove" data-idx="${i}">✕</button></div>`).join('');
   const mealHtml=CONFIG.MEAL_TYPES.map(m=>`<label class="meal-radio"><input type="radio" name="meal-type" value="${m}" ${m==='dinner'?'checked':''}/><span>${CONFIG.MEAL_LABELS[m]}</span></label>`).join('');
   const sum=cart.reduce((s,c)=>s+(c.dish.price||0),0);
-  const r=await modal('🛒 购物车',`<div class="cart-list">${html}</div><div class="meal-select"><div class="meal-label">这顿是：</div><div class="meal-options">${mealHtml}</div></div><div class="cart-summary">共${cart.length}道·¥${sum}</div>`,[{text:'继续加',value:'no'},{text:'确认下单🍳',value:'ok',cls:'btn-primary'}]);
-  document.querySelectorAll('.cart-note').forEach(inp=>{const i=parseInt(inp.dataset.idx);if(cart[i])cart[i].note=inp.value.trim();});
-  document.querySelectorAll('.cart-remove').forEach(b=>{b.onclick=()=>{const i=parseInt(b.dataset.idx);cart.splice(i,1);document.querySelector('.modal-overlay')?.remove();updateCartBar();if(cart.length)showCartModal();else renderDishList(activeCat);};});
-  if(r!=='ok')return;
+  const result=await modal('🛒 购物车',`<div class="cart-list">${html}</div><div class="meal-select"><div class="meal-label">这顿是：</div><div class="meal-options">${mealHtml}</div></div><div class="cart-summary">共${cart.length}道·¥${sum}</div>`,[{text:'继续加',value:'no'},{text:'确认下单🍳',value:'ok',cls:'btn-primary'}]);
+  result.overlay.querySelectorAll('.cart-note').forEach(inp=>{const i=parseInt(inp.dataset.idx);if(cart[i])cart[i].note=inp.value.trim();});
+  result.overlay.querySelectorAll('.cart-remove').forEach(b=>{b.onclick=()=>{const i=parseInt(b.dataset.idx);cart.splice(i,1);result.overlay.remove();updateCartBar();if(cart.length)showCartModal();else renderDishList(activeCat);};});
+  if(result.value!=='ok'){result.overlay.remove();return;}
   document.getElementById('cust-submit').click();
 }
 
@@ -149,6 +149,7 @@ async function submitOrder() {
   const totalTime=orders.reduce((s,o)=>s+(store.dishes.find(d=>d.id===o.dish_id)?.cooking_time||15),0);
   const names=orders.map(o=>store.dishes.find(d=>d.id===o.dish_id)?.name||'?').join('、');
   cart=[];updateCartBar();document.querySelector('.modal-overlay')?.remove();
-  modal('✅ 下单成功！',`<div style="text-align:center;padding:12px"><div style="font-size:56px;">🍳</div><div style="font-size:16px;font-weight:700;">${names}</div><div style="font-size:13px;color:var(--tx2);margin-top:8px;">预计${totalTime}分钟后开吃✨</div></div>`,[{text:'好的👌',value:'ok',cls:'btn-primary'}]);
+  const okModal = await modal('✅ 下单成功！',`<div style="text-align:center;padding:12px"><div style="font-size:56px;">🍳</div><div style="font-size:16px;font-weight:700;">${names}</div><div style="font-size:13px;color:var(--tx2);margin-top:8px;">预计${totalTime}分钟后开吃✨</div></div>`,[{text:'好的👌',value:'ok',cls:'btn-primary'}]);
+  okModal.overlay.remove();
   emit('order-placed');renderDishList(activeCat);
 }

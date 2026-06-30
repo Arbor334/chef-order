@@ -34,13 +34,13 @@ export function modal(title, content, actions = []) {
     document.body.appendChild(overlay);
 
     overlay.addEventListener('click', e => {
-      if (e.target === overlay) { overlay.remove(); resolve(null); }
+      if (e.target === overlay) { overlay.remove(); resolve({ value: null, overlay }); }
     });
     overlay.querySelectorAll('.modal-foot .btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx);
-        overlay.remove();
-        resolve(actions[idx]?.value ?? idx);
+        // ⚡ 不立刻删除 DOM，caller 需要先读表单值
+        resolve({ value: actions[idx]?.value ?? idx, overlay });
       });
     });
   });

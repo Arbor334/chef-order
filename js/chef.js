@@ -71,11 +71,12 @@ async function showBannerForm() {
   try { banner = await loadBanner(); } catch (_) { }
   const html = `<div class="form-g"><label>今天想对她说什么</label><textarea id="bn-msg" rows="3" placeholder="比如：今天做了红烧肉~">${banner.message||''}</textarea></div>
     <div class="form-g"><label>背景图</label><input type="file" id="bn-img" accept="image/*"/>${banner.image_url?`<div class="form-img-preview"><img src="${banner.image_url}"/></div>`:''}</div>`;
-  const r = await modal('📢 每日示爱', html, [{ text: '取消', value: 'no' }, { text: '保存并推送 💌', value: 'ok', cls: 'btn-primary' }]);
-  if (r !== 'ok') return;
-  const msg = document.getElementById('bn-msg')?.value.trim() || '';
+  const result = await modal('📢 每日示爱', html, [{ text: '取消', value: 'no' }, { text: '保存并推送 💌', value: 'ok', cls: 'btn-primary' }]);
+  if (result.value !== 'ok') { result.overlay.remove(); return; }
+  const msg = result.overlay.querySelector('#bn-msg')?.value?.trim() || '';
   let img = banner.image_url || '';
-  const f = document.getElementById('bn-img')?.files?.[0];
+  const f = result.overlay.querySelector('#bn-img')?.files?.[0];
+  result.overlay.remove();
   if (f) { try { img = await uploadImage(f); } catch (e) { toast('上传失败', 'error'); return; } }
   await getSupabase().from('banner').upsert({ id: 1, message: msg, image_url: img }, { onConflict: 'id' });
   await renderBanner();
@@ -126,31 +127,31 @@ async function showDishForm(dish=null) {
     <div class="form-g"><label>价格 ¥</label><input id="df-price" type="number" value="${dish?.price||0}"/></div>
     <div class="form-g"><label>步骤(每行一步)</label><textarea id="df-steps" rows="6" placeholder="1. 焯水&#10;2. 炒香&#10;3. 炖煮">${dish?.steps||''}</textarea></div>
     <div class="form-g"><label>图片</label><input type="file" id="df-img" accept="image/*"/>${dish?.image_url?`<div class="form-img-preview"><img src="${dish.image_url}"/></div>`:''}</div>`;
-  const r = await modal(isEdit?'编辑菜品':'➕ 添加菜品', html, [{text:'取消',value:'no'},{text:isEdit?'保存':'添加',value:'ok',cls:'btn-primary'}]);
-  if (r !== 'ok') return;
-  const name = document.getElementById('df-name')?.value.trim();
-  if (!name) { toast('请输入菜名','error'); return; }
+  const result = await modal(isEdit?'编辑菜品':'➕ 添加菜品', html, [{text:'取消',value:'no'},{text:isEdit?'保存':'添加',value:'ok',cls:'btn-primary'}]);
+  if (result.value !== 'ok') { result.overlay.remove(); return; }
+  const name = result.overlay.querySelector('#df-name')?.value?.trim();
+  if (!name) { toast('请输入菜名','error'); result.overlay.remove(); return; }
   const payload = {
-    name, category:document.getElementById('df-cat')?.value,
-    ingredients:document.getElementById('df-ingr')?.value.trim()||'',
-    cooking_time:parseInt(document.getElementById('df-time')?.value)||15,
-    price:parseInt(document.getElementById('df-price')?.value)||0,
-    steps:document.getElementById('df-steps')?.value.trim()||'',
+    name, category:result.overlay.querySelector('#df-cat')?.value,
+    ingredients:result.overlay.querySelector('#df-ingr')?.value?.trim()||'',
+    cooking_time:parseInt(result.overlay.querySelector('#df-time')?.value)||15,
+    price:parseInt(result.overlay.querySelector('#df-price')?.value)||0,
+    steps:result.overlay.querySelector('#df-steps')?.value?.trim()||'',
     is_active:true
   };
   let img = dish?.image_url||'';
-  const f = document.getElementById('df-img')?.files?.[0];
+  const f = result.overlay.querySelector('#df-img')?.files?.[0];
+  result.overlay.remove();
   if (f) { try { img = await uploadImage(f); } catch (e) { toast('上传失败','error'); return; } }
-  payload.image_url = img;
-  const sb = getSupabase();
   if (isEdit) { await sb.from('dishes').update(payload).eq('id',dish.id); toast('已更新','success'); }
   else { await sb.from('dishes').insert(payload); toast('新菜上架！','success'); }
   await loadDishes(); renderSidebar(); renderDishList(activeCat);
 }
 
 async function deleteDish(dish) {
-  const r = await modal('删除',`确定删除「${dish.name}」？`,[{text:'取消',value:'no'},{text:'删除',value:'ok',cls:'btn-danger'}]);
-  if (r!=='ok') return;
+  const result = await modal('删除',`确定删除「${dish.name}」？`,[{text:'取消',value:'no'},{text:'删除',value:'ok',cls:'btn-danger'}]);
+  result.overlay.remove();
+  if (result.value !== 'ok') return;
   await getSupabase().from('dishes').update({is_active:false}).eq('id',dish.id);
   toast('已删除'); await loadDishes(); renderSidebar(); renderDishList(activeCat);
 }
