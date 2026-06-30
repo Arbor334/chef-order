@@ -1,33 +1,30 @@
 /* ============================================================
-   ChefOrder — 全局样式 v2
+   ChefOrder v3 — 美团风格
    ============================================================ */
 
 :root {
-  --ac: #ff6b35; --ac2: #ff8c42;
-  --bg: #fffaf5; --bg2: #fff; --bg3: #fff3e8; --bgh: #fffdf9;
-  --tx: #2d1b0e; --tx2: #6b4d3a; --tx3: #b89a7a;
-  --bd: #f0e0d0; --bd2: #e8d5c0;
-  --danger: #e8453c; --success: #4caf50;
+  --ac: #ff6b35; --ac2: #ff8c42; --acd: rgba(255,107,53,.1);
+  --bg: #f8f6f3; --bg2: #fff; --bg3: #f0eeea; --bgh: #fafaf8;
+  --tx: #222; --tx2: #666; --tx3: #999;
+  --bd: #eee; --bd2: #e5e3df;
+  --danger: #e8453c; --success: #4caf50; --hotpot: #d32f2f;
   --radius: 16px; --radius-sm: 10px;
-  --shadow: 0 2px 16px rgba(0,0,0,.05);
+  --shadow: 0 2px 12px rgba(0,0,0,.04);
   --bottom-nav-h: 0px;
-  /* 分类色 */
-  --cat-meat: #e8453c; --cat-veg: #4caf50; --cat-soup: #ff9800;
-  --cat-cold: #2196f3; --cat-staple: #ffc107; --cat-snack: #9c27b0; --cat-drink: #00bcd4;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1a1410; --bg2: #211b15; --bg3: #2c2218; --bgh: #261e16;
-    --tx: #f0e0d0; --tx2: #c4a88c; --tx3: #7a6650;
-    --bd: #3a2a18; --bd2: #4a3828;
-    --shadow: 0 2px 16px rgba(0,0,0,.3);
+    --bg: #1a1816; --bg2: #221f1c; --bg3: #2c2824; --bgh: #282420;
+    --tx: #e8e4e0; --tx2: #a8a098; --tx3: #6e6860;
+    --bd: #383430; --bd2: #484440;
+    --shadow: 0 2px 12px rgba(0,0,0,.3);
   }
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background:var(--bg); color:var(--tx); overflow-x:hidden; min-height:100dvh; -webkit-tap-highlight-color:transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background:var(--bg); color:var(--tx); overflow-x:hidden; min-height:100dvh; -webkit-tap-highlight-color:transparent; }
 input, select, button, textarea { font:inherit; color:inherit; }
-button { cursor:pointer; border:none; background:none; }
+button { cursor:pointer; border:none; background:none; -webkit-tap-highlight-color:transparent; }
 img { max-width:100%; }
 
 #app { max-width:480px; margin:0 auto; min-height:100dvh; background:var(--bg2); box-shadow:var(--shadow); position:relative; padding-bottom:calc(var(--bottom-nav-h) + 16px); }
@@ -37,7 +34,7 @@ img { max-width:100%; }
 /* ==================== Login ==================== */
 .login-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100dvh; padding:40px 24px; text-align:center; background:linear-gradient(180deg, #fff3e8 0%, var(--bg2) 40%); }
 .login-logo { width:80px; height:80px; border-radius:24px; background:linear-gradient(135deg, var(--ac), #e8453c); display:flex; align-items:center; justify-content:center; font-size:40px; margin-bottom:16px; box-shadow:0 8px 24px rgba(255,107,53,.3); }
-.login-title { font-size:26px; font-weight:800; letter-spacing:-.5px; margin-bottom:4px; }
+.login-title { font-size:26px; font-weight:800; margin-bottom:4px; }
 .login-sub { font-size:14px; color:var(--tx3); margin-bottom:32px; }
 .login-form { width:100%; max-width:320px; display:flex; flex-direction:column; gap:12px; }
 .login-form input, .login-form select { width:100%; padding:14px 16px; background:var(--bg); border:1.5px solid var(--bd2); border-radius:var(--radius-sm); font-size:15px; outline:none; transition:all .15s; }
@@ -52,10 +49,10 @@ img { max-width:100%; }
 .btn-primary:active { transform:scale(.97); filter:brightness(1.1); }
 .btn-danger { background:var(--danger); color:#fff; }
 .btn-block { width:100%; }
-.btn-sm { padding:6px 14px; font-size:12px; border-radius:20px; }
+.btn-outline { border:1.5px solid var(--ac); color:var(--ac); background:transparent; }
 
 /* ==================== Header ==================== */
-.page-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; position:sticky; top:0; background:var(--bg2); z-index:50; border-bottom:1px solid var(--bd); backdrop-filter:blur(10px); }
+.page-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; position:sticky; top:0; background:var(--bg2); z-index:50; border-bottom:1px solid var(--bd); }
 .page-head h2 { font-size:18px; font-weight:700; }
 .head-actions { display:flex; gap:8px; align-items:center; }
 .head-actions button { font-size:13px; color:var(--ac); padding:6px 14px; border-radius:20px; background:var(--acd); font-weight:600; }
@@ -67,50 +64,51 @@ img { max-width:100%; }
 .bottom-nav .nav-icon { font-size:22px; line-height:1; margin-bottom:2px; }
 .nav-badge { position:absolute; top:6px; right:calc(50% - 26px); min-width:18px; height:18px; border-radius:9px; background:var(--danger); color:#fff; font-size:10px; display:none; align-items:center; justify-content:center; font-weight:700; }
 
-/* ==================== Category Tabs ==================== */
-.cat-tabs { display:flex; gap:8px; padding:14px 16px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+/* ==================== Category Tabs (美团风格) ==================== */
+.cat-tabs { display:flex; gap:0; padding:10px 8px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; white-space:nowrap; }
 .cat-tabs::-webkit-scrollbar { display:none; }
-.cat-tab { flex-shrink:0; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:500; background:var(--bg3); color:var(--tx2); transition:all .2s; white-space:nowrap; }
-.cat-tab.active { background:var(--ac); color:#fff; font-weight:700; box-shadow:0 3px 10px rgba(255,107,53,.3); }
+.cat-tab { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 14px; border-radius:12px; font-size:12px; font-weight:500; color:var(--tx2); transition:all .2s; min-width:58px; }
+.cat-tab .cat-emoji { font-size:24px; line-height:1; transition:transform .2s; }
+.cat-tab.active { color:var(--ac); font-weight:700; background:var(--acd); }
+.cat-tab.active .cat-emoji { transform:scale(1.15); }
+.cat-tab.hotpot { color:var(--hotpot); }
+.cat-tab.hotpot.active { color:var(--hotpot); background:rgba(211,47,47,.08); }
 
-/* ==================== Dish Grid (Customer) ==================== */
-.dish-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; padding:0 16px 16px; }
-.dish-card { background:var(--bg); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:all .2s; border:2px solid transparent; position:relative; }
-.dish-card:active { transform:scale(.97); }
-.dish-card.in-cart { border-color:var(--ac); }
-.dc-img { width:100%; padding-top:75%; background:var(--bg3) center/cover no-repeat; position:relative; }
-.dc-img-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
-.dc-img-empty .dc-emoji { font-size:36px; line-height:1; }
-.dc-img-empty .dc-name-overlay { font-size:13px; font-weight:700; color:rgba(0,0,0,.4); }
-.dc-body { padding:10px 12px 12px; }
-.dc-name { font-size:14px; font-weight:700; margin-bottom:4px; line-height:1.3; }
-.dc-meta { font-size:11px; color:var(--tx3); margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.dc-footer { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--tx3); }
-.dc-time { display:inline-flex; align-items:center; gap:3px; background:var(--bg3); padding:2px 8px; border-radius:10px; }
-.dc-badge { position:absolute; top:8px; right:8px; width:24px; height:24px; border-radius:50%; background:var(--ac); color:#fff; font-size:14px; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.5); transition:all .2s; }
-.dish-card.in-cart .dc-badge { opacity:1; transform:scale(1); }
+/* ==================== Dish List — 美团风格单列大卡片 ==================== */
+.dish-list { padding:0 12px 100px; }
+.dish-card { display:flex; gap:12px; padding:12px; margin-bottom:10px; background:var(--bg2); border-radius:var(--radius); border:1px solid var(--bd); transition:all .15s; position:relative; overflow:hidden; }
+.dish-card:active { background:var(--bgh); transform:scale(.985); }
+.dish-card.in-cart { border-color:var(--ac); background:var(--acd); }
+.dish-card-img { width:100px; height:100px; border-radius:var(--radius-sm); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:44px; position:relative; overflow:hidden; }
+.dish-card-img img { width:100%; height:100%; object-fit:cover; }
+.dish-card-body { flex:1; display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
+.dish-card-title { font-size:16px; font-weight:700; line-height:1.2; margin-bottom:4px; }
+.dish-card-desc { font-size:12px; color:var(--tx3); margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dish-card-tags { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:6px; }
+.dish-card-tag { font-size:10px; padding:2px 8px; border-radius:10px; background:var(--bg3); color:var(--tx3); }
+.dish-card-tag.steps { color:var(--ac); background:var(--acd); }
+.dish-card-bottom { display:flex; align-items:center; justify-content:space-between; }
+.dish-card-time { font-size:12px; color:var(--tx3); display:flex; align-items:center; gap:3px; }
+.dish-card-add { width:28px; height:28px; border-radius:50%; background:var(--ac); color:#fff; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; box-shadow:0 2px 8px rgba(255,107,53,.3); }
+.dish-card-add:active { transform:scale(.9); }
+.dish-card-add.in-cart { background:var(--success); }
+.dish-card-badge { position:absolute; top:8px; right:8px; background:var(--ac); color:#fff; font-size:10px; padding:2px 8px; border-radius:8px; font-weight:600; }
 
-/* ==================== Dish Detail Modal ==================== */
-.dish-detail-img { width:100%; padding-top:60%; border-radius:var(--radius-sm); margin-bottom:16px; background:var(--bg3) center/cover no-repeat; display:flex; align-items:center; justify-content:center; font-size:64px; }
-.dish-detail-name { font-size:22px; font-weight:800; margin-bottom:8px; }
-.dish-detail-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
-.dish-detail-tag { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:var(--bg3); color:var(--tx2); }
-.dish-detail-tag.time { background:rgba(255,107,53,.1); color:var(--ac); }
-.dish-detail-section { margin-bottom:16px; }
-.dish-detail-section h4 { font-size:14px; font-weight:700; margin-bottom:8px; color:var(--tx2); }
-.dish-detail-steps { list-style:none; counter-reset:step; }
-.dish-detail-steps li { counter-increment:step; padding:8px 0 8px 32px; position:relative; font-size:14px; line-height:1.6; border-bottom:1px solid var(--bd); }
-.dish-detail-steps li::before { content:counter(step); position:absolute; left:0; top:10px; width:22px; height:22px; border-radius:50%; background:var(--ac); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; }
-.ingredient-chips { display:flex; flex-wrap:wrap; gap:6px; }
-.ingredient-chip { padding:4px 12px; border-radius:20px; font-size:12px; background:var(--bg3); color:var(--tx2); border:1px solid var(--bd2); }
+/* ==================== Hotpot Section ==================== */
+.hotpot-banner { margin:0 12px 12px; padding:12px 16px; border-radius:var(--radius); background:linear-gradient(135deg, #fce4ec, #ffcdd2); display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600; color:var(--hotpot); }
+.hotpot-banner .hb-icon { font-size:28px; }
+@media (prefers-color-scheme: dark) {
+  .hotpot-banner { background:linear-gradient(135deg, #3a1a22, #4a2028); }
+}
 
-/* ==================== Chef Dish List ==================== */
+/* ==================== Chef Dish List（保持原样）==================== */
 .chef-cat-section { margin-bottom:4px; }
 .chef-cat-title { padding:14px 16px 10px; font-size:15px; font-weight:700; color:var(--tx2); display:flex; align-items:center; gap:8px; position:sticky; top:56px; background:var(--bg2); z-index:5; }
 .cat-count { font-size:11px; color:var(--tx3); background:var(--bg3); padding:2px 10px; border-radius:10px; font-weight:400; }
 .chef-dish-item { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--bd); transition:background .15s; }
 .chef-dish-item:active { background:var(--bgh); }
 .cdi-thumb { width:56px; height:56px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:28px; }
+.cdi-thumb img { width:100%; height:100%; object-fit:cover; border-radius:12px; }
 .cdi-info { flex:1; min-width:0; }
 .cdi-name { font-size:15px; font-weight:700; }
 .cdi-meta-row { display:flex; gap:8px; margin-top:4px; }
@@ -125,22 +123,24 @@ img { max-width:100%; }
 .fab:active { transform:scale(.9) rotate(90deg); }
 @media (max-width:480px) { .fab { right:20px; bottom:70px; } }
 
-/* ==================== Cart Bar ==================== */
-.cart-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--bg2); border-top:1px solid var(--bd); z-index:90; padding-bottom:calc(12px + env(safe-area-inset-bottom, 4px)); }
+/* ==================== Cart Bar（毛玻璃）==================== */
+.cart-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; display:flex; align-items:center; gap:12px; padding:12px 16px; background:rgba(255,255,255,.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-top:1px solid var(--bd); z-index:90; padding-bottom:calc(12px + env(safe-area-inset-bottom, 4px)); }
+@media (prefers-color-scheme: dark) {
+  .cart-bar { background:rgba(34,31,28,.92); }
+}
 .cart-info { flex:1; min-width:0; }
 .cart-label { font-size:13px; font-weight:700; }
-.cart-detail { font-size:11px; color:var(--tx3); margin-top:2px; }
-.cart-badge { min-width:22px; height:22px; border-radius:11px; background:var(--danger); color:#fff; font-size:11px; font-weight:700; display:none; align-items:center; justify-content:center; }
+.cart-detail { font-size:11px; color:var(--tx3); margin-top:1px; }
+.cart-badge { min-width:24px; height:24px; border-radius:12px; background:var(--danger); color:#fff; font-size:12px; font-weight:700; display:none; align-items:center; justify-content:center; }
 
 /* ==================== Cart Modal ==================== */
 .cart-list { max-height:50vh; overflow-y:auto; }
 .cart-item { display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--bd); }
-.cart-info { flex:1; }
 .cart-name { font-size:14px; font-weight:700; }
 .cart-time { font-size:11px; color:var(--tx3); }
 .cart-note { width:100%; margin-top:6px; padding:8px 12px; background:var(--bg3); border:1.5px solid var(--bd2); border-radius:var(--radius-sm); font-size:13px; outline:none; }
 .cart-note:focus { border-color:var(--ac); }
-.cart-remove { font-size:20px; color:var(--tx3); padding:6px 10px; }
+.cart-remove { font-size:20px; color:var(--tx3); padding:6px; }
 .cart-remove:active { color:var(--danger); }
 .cart-summary { text-align:center; padding:14px 0 0; font-size:15px; font-weight:700; }
 
@@ -162,14 +162,29 @@ img { max-width:100%; }
 .oc-arrow { font-size:10px; color:var(--tx3); display:flex; align-items:center; }
 
 /* ==================== Modal ==================== */
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:flex-end; justify-content:center; z-index:200; animation:fadeIn .15s; }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; z-index:200; animation:fadeIn .2s; }
 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-.modal-box { width:100%; max-width:480px; max-height:90vh; background:var(--bg2); border-radius:var(--radius) var(--radius) 0 0; overflow-y:auto; animation:slideUp .25s; }
+.modal-box { width:100%; max-width:480px; max-height:90vh; background:var(--bg2); border-radius:var(--radius) var(--radius) 0 0; overflow-y:auto; animation:slideUp .3s cubic-bezier(.16,1,.3,1); }
 @keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
-.modal-head { padding:16px; font-size:17px; font-weight:800; border-bottom:1px solid var(--bd); text-align:center; position:sticky; top:0; background:var(--bg2); z-index:5; border-radius:var(--radius) var(--radius) 0 0; }
+.modal-head { padding:16px; font-size:17px; font-weight:800; border-bottom:1px solid var(--bd); text-align:center; position:sticky; top:0; background:var(--bg2); z-index:5; border-radius:var(--radius) var(--radius) 0 0; display:flex; align-items:center; justify-content:center; }
+.modal-head .modal-close { position:absolute; right:16px; font-size:20px; color:var(--tx3); padding:4px; }
 .modal-body { padding:16px; }
 .modal-foot { display:flex; gap:10px; padding:12px 16px 20px; border-top:1px solid var(--bd); position:sticky; bottom:0; background:var(--bg2); }
 .modal-foot .btn { flex:1; }
+
+/* ==================== Dish Detail Modal ==================== */
+.dish-detail-img { width:100%; padding-top:56%; border-radius:var(--radius-sm); margin-bottom:16px; display:flex; align-items:center; justify-content:center; font-size:72px; }
+.dish-detail-name { font-size:22px; font-weight:800; margin-bottom:8px; }
+.dish-detail-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.dish-detail-tag { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:var(--bg3); color:var(--tx2); }
+.dish-detail-tag.time { background:rgba(255,107,53,.1); color:var(--ac); }
+.dish-detail-section { margin-bottom:16px; }
+.dish-detail-section h4 { font-size:14px; font-weight:700; margin-bottom:10px; color:var(--tx2); display:flex; align-items:center; gap:6px; }
+.dish-detail-steps { list-style:none; counter-reset:step; }
+.dish-detail-steps li { counter-increment:step; padding:8px 0 8px 36px; position:relative; font-size:14px; line-height:1.7; border-bottom:1px solid var(--bd); }
+.dish-detail-steps li::before { content:counter(step); position:absolute; left:0; top:10px; width:24px; height:24px; border-radius:50%; background:var(--ac); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.ingredient-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.ingredient-chip { padding:5px 14px; border-radius:20px; font-size:13px; background:var(--bg3); color:var(--tx2); border:1px solid var(--bd2); }
 
 /* ==================== Form ==================== */
 .form-g { margin-bottom:16px; }
@@ -182,7 +197,7 @@ img { max-width:100%; }
 .form-img-preview img { border-radius:var(--radius-sm); max-height:120px; }
 
 /* ==================== Toast ==================== */
-.toast { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-120px); padding:12px 28px; border-radius:24px; font-size:14px; font-weight:700; z-index:999; transition:transform .3s cubic-bezier(.17,.89,.32,1.27); color:#fff; background:#333; white-space:nowrap; max-width:90vw; overflow:hidden; text-overflow:ellipsis; box-shadow:0 8px 24px rgba(0,0,0,.2); }
+.toast { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-120px); padding:12px 28px; border-radius:24px; font-size:14px; font-weight:700; z-index:999; transition:transform .3s cubic-bezier(.17,.89,.32,1.27); color:#fff; background:#333; white-space:nowrap; max-width:90vw; box-shadow:0 8px 24px rgba(0,0,0,.2); }
 .toast.show { transform:translateX(-50%) translateY(0); }
 .toast-error { background:var(--danger); }
 .toast-info { background:var(--ac); }
@@ -192,8 +207,6 @@ img { max-width:100%; }
 .empty-state { text-align:center; padding:64px 24px; color:var(--tx3); font-size:14px; }
 .empty-icon { font-size:56px; margin-bottom:16px; opacity:.8; }
 .loading { text-align:center; padding:64px; color:var(--tx3); }
-
-/* ==================== Misc ==================== */
 .fav-section.hidden, .grid-section.hidden { display:none; }
 .chef-pending { position:relative; }
 #chef-pending-count { display:none; }
