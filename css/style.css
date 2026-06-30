@@ -126,11 +126,13 @@ input,select,button,textarea { font:inherit; color:inherit; } button { cursor:po
 .fab { position:fixed; bottom:90px; right:calc(50% - 220px); width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,var(--ac),var(--ac2)); color:#fff; font-size:26px; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(255,107,53,.4); z-index:90; transition:.2s; }
 .fab:active { transform:scale(.9); } @media(max-width:480px){.fab{right:16px;bottom:80px;}}
 .is-customer .bottom-nav { display:none; }
-.is-customer .fab { display:none !important; }
-.is-customer #chef-banner-edit { display:none !important; }
-.is-customer #chef-pending-btn { display:none !important; }
+.is-customer .fab { display:none; }
+.is-customer #chef-banner-edit { display:none; }
+.is-customer #chef-pending-btn { display:none; }
 .has-cart { padding-bottom:70px; }
 .is-chef .cust-card-add { display:none; }
+/* Banner 双端都显示 */
+.is-chef #cust-banner, .is-customer #cust-banner { display:block; }
 
 /* ===== Bottom Nav (Chef) ===== */
 .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; display:flex; background:var(--bg2); border-top:1px solid var(--bd); z-index:100; padding:6px 0 env(safe-area-inset-bottom,6px); }

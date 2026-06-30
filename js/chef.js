@@ -51,8 +51,18 @@ async function renderBanner() {
     const b = await loadBanner();
     const m = document.getElementById('cust-banner-msg');
     const g = document.getElementById('cust-banner-bg');
-    if (m) m.textContent = b.message || '今天想吃点什么？';
-    if (g && b.image_url) { g.style.backgroundImage = `url(${b.image_url})`; g.classList.add('has-bg'); }
+    if (!m || !g) return;
+    const hasMsg = b.message && b.message.trim();
+    const hasImg = b.image_url && b.image_url.length > 10;
+    m.textContent = hasMsg ? b.message : '今天想吃点什么？';
+    if (hasImg) {
+      g.style.backgroundImage = `url(${b.image_url})`;
+      g.classList.add('has-bg');
+    } else {
+      g.style.backgroundImage = '';
+      g.classList.remove('has-bg');
+    }
+    document.getElementById('cust-banner').style.display = '';
   } catch (_) {}
 }
 
