@@ -12,6 +12,7 @@ let activeCat = CONFIG.CATEGORIES[0];
 export async function initChefPage() {
   await loadDishes();
   await loadOrders({ status: 'pending' });
+  await renderChefBanner();
   initBannerEditor();
   renderSidebar();
   renderDishList(activeCat);
@@ -101,17 +102,32 @@ function renderChefCard(d) {
 }
 
 // ===== Banner =====
-async function initBannerEditor() {
-  try { const b = await loadBanner(); if(b){document.getElementById('chef-banner-edit').textContent=b.message?'📢✓':'📢';} }catch(_){}
+async function renderChefBanner() {
+  try {
+    const banner = await loadBanner();
+    const msgEl = document.getElementById('cust-banner-msg');
+    const bgEl = document.getElementById('cust-banner-bg');
+    if (msgEl) msgEl.textContent = banner.message || '今天想吃点什么？';
+    if (bgEl && banner.image_url) {
+      bgEl.style.backgroundImage = `url(${banner.image_url})`;
+      bgEl.classList.add('has-bg');
+    }
+  } catch (_) {}
+}
+
+function initBannerEditor() {
   document.getElementById('chef-banner-edit').addEventListener('click', () => showBannerForm());
+  // 点击 banner 也能编辑
+  document.getElementById('cust-banner').addEventListener('click', () => showBannerForm());
+  document.getElementById('cust-banner').style.cursor = 'pointer';
 }
 
 async function showBannerForm() {
   let banner = { message:'', image_url:'' };
   try { banner = await loadBanner(); } catch(_) {}
-  const html = `<div class="form-g"><label>今日留言</label><textarea id="bn-msg" rows="3">${banner.message||''}</textarea></div>
-    <div class="form-g"><label>背景图</label><input type="file" id="bn-img" accept="image/*"/>${banner.image_url?`<div class="form-img-preview"><img src="${banner.image_url}"/></div>`:''}</div>`;
-  const r = await modal('📢 今日想说', html, [{text:'取消',value:'cancel'},{text:'保存',value:'ok',cls:'btn-primary'}]);
+  const html = `<div class="form-g"><label>今天想对她说的话</label><textarea id="bn-msg" rows="3" placeholder="比如：今天做了红烧肉，快下单~">${banner.message||''}</textarea></div>
+    <div class="form-g"><label>背景图（可选）</label><input type="file" id="bn-img" accept="image/*"/>${banner.image_url?`<div class="form-img-preview"><img src="${banner.image_url}"/></div>`:''}</div>`;
+  const r = await modal('📢 今日想说', html, [{text:'取消',value:'cancel'},{text:'保存并推送',value:'ok',cls:'btn-primary'}]);
   if (r !== 'ok') return;
   const msg = document.getElementById('bn-msg')?.value.trim()||'';
   let img = banner.image_url||'';
@@ -119,8 +135,9 @@ async function showBannerForm() {
   if(f){try{img=await uploadImage(f);}catch(e){toast('上传失败','error');return;}}
   const sb = getSupabase();
   await sb.from('banner').upsert({id:1,message:msg,image_url:img},{onConflict:'id'});
-  document.getElementById('chef-banner-edit').textContent = msg ? '📢✓' : '📢';
-  toast('已更新','success');
+  // 立即刷新 banner
+  await renderChefBanner();
+  toast('已推送到她的页面！','success');
 }
 
 // ===== Dish Form =====
