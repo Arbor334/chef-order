@@ -3,7 +3,7 @@
 // ============================================================
 import { CONFIG } from '../config.js';
 import { getSupabase, getUser } from './supabase.js';
-import { store, loadDishes, loadFavorites, loadBanner, emit } from './store.js';
+import { store, loadDishes, loadFavorites, loadBanner, subscribeBanner, emit } from './store.js';
 import { toast, modal } from './ui.js';
 import { DISH_EMOJI, catGradient } from './shared.js';
 
@@ -14,6 +14,7 @@ export async function initCustomerPage() {
   await loadDishes();
   await loadFavorites(user.id);
   await renderBanner();
+  subscribeBanner(() => renderBanner());   // 厨师改了Banner实时推过来
 
   // 隐藏厨师专属
   document.getElementById('chef-fab').style.display = 'none';

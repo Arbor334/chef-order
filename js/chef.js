@@ -3,7 +3,7 @@
 // ============================================================
 import { CONFIG } from '../config.js';
 import { getSupabase, getUser } from './supabase.js';
-import { store, loadDishes, loadOrders, subscribeOrders, loadBanner } from './store.js';
+import { store, loadDishes, loadOrders, subscribeOrders, loadBanner, subscribeBanner } from './store.js';
 import { toast, modal } from './ui.js';
 import { DISH_EMOJI, catGradient } from './shared.js';
 

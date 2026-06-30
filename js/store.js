@@ -120,3 +120,17 @@ export async function loadBanner() {
   emit('banner-loaded', banner);
   return banner;
 }
+
+let _bannerSub = null;
+export function subscribeBanner(callback) {
+  const sb = getSupabase();
+  if (_bannerSub) _bannerSub.unsubscribe();
+  _bannerSub = sb.channel('banner-realtime')
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'banner' },
+      () => {
+        loadBanner().then(b => callback?.(b));
+      }
+    )
+    .subscribe();
+}
