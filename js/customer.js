@@ -181,5 +181,15 @@ async function submitOrder() {
   const newFavs = orders.map(o => o.dish_id).filter(id => !store.favorites.has(id));
   if (newFavs.length) { await sb.from('favorites').upsert(newFavs.map(dish_id => ({ user_id: user.id, dish_id })), { onConflict: 'user_id,dish_id', ignoreDuplicates: true }); newFavs.forEach(id => store.favorites.add(id)); }
   cart = []; updateCartBar(); document.querySelector('.modal-overlay')?.remove();
-  toast('下单成功！厨师马上开始做 🍳', 'success'); emit('order-placed'); renderDishList(activeCat);
+  emit('order-placed'); renderDishList(activeCat);
+  // 下单成功总结
+  const totalTime = orders.reduce((s, o) => s + (store.dishes.find(d => d.id === o.dish_id)?.cooking_time || 15), 0);
+  const names = orders.map(o => store.dishes.find(d => d.id === o.dish_id)?.name || '?').join('、');
+  const summaryHtml = `<div style="text-align:center;padding:12px 0;">
+    <div style="font-size:56px;margin-bottom:12px;">🍳</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:4px;">下单成功！</div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:8px;">${names}</div>
+    <div style="font-size:12px;color:var(--tx3);">预计 ${totalTime} 分钟后可以开吃 ✨</div>
+  </div>`;
+  modal('✅ 已下单', summaryHtml, [{ text: '好的 👌', value: 'ok', cls: 'btn-primary' }]);
 }
