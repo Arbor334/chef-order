@@ -22,7 +22,7 @@ self.addEventListener('activate', e => {
 
 // 网络优先策略：先尝试网络，失败才用缓存
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('supabase.co') || e.request.url.includes('jsdelivr.net')) return;
+  if (e.request.url.includes('supabase.co') || e.request.url.includes('unpkg.com') || e.request.url.includes('jsdelivr.net') || e.request.url.includes('esm.sh')) return;
   e.respondWith(
     fetch(e.request)
       .then(res => {
