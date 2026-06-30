@@ -93,7 +93,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://esm.sh/@supabase/supabase-js@2"></script>
 <script type="module" src="/js/supabase.js"></script>
 <script type="module" src="/js/store.js"></script>
 <script type="module" src="/js/ui.js"></script>
@@ -145,17 +145,12 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 定义路由
   route('chef', async () => {
-    document.getElementById('bottom-nav').style.display = 'flex';
-    const nav = document.querySelectorAll('.bottom-nav .nav-item');
-    nav.forEach(n => n.classList.toggle('active', n.dataset.nav === 'chef'));
     const page = document.getElementById('page-chef');
     await initChefPage();
     return page;
   });
 
   route('customer', async () => {
-    document.getElementById('bottom-nav').style.display = 'none';
-    document.getElementById('cust-logout').addEventListener('click', signOut);
     const page = document.getElementById('page-customer');
     await initCustomerPage();
     return page;
