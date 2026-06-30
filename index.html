@@ -34,56 +34,46 @@
     </form>
   </div>
 
-  <!-- ============================== Chef Home ============================== -->
-  <div id="page-chef" class="page hidden">
+  <!-- ============================== Menu Page (Shared) ============================== -->
+  <div id="page-menu" class="page hidden">
+    <div id="cust-banner" class="banner-hero">
+      <div class="banner-bg" id="cust-banner-bg"></div>
+      <div class="banner-text" id="cust-banner-msg">今天想吃点什么？</div>
+    </div>
     <div class="top-bar">
-      <div class="top-bar-mascot">👨‍🍳</div>
+      <div class="top-bar-mascot" id="top-mascot">👨‍🍳</div>
       <div class="top-bar-text">
-        <div class="top-bar-title">我的菜单</div>
-        <div class="top-bar-sub">今天想让客人们吃点什么？</div>
+        <div class="top-bar-title" id="top-title">我的菜单</div>
+        <div class="top-bar-sub" id="top-sub">今天想让客人们吃点什么？</div>
       </div>
       <div class="top-bar-actions">
         <button id="chef-banner-edit" class="top-bar-btn">📢</button>
         <button id="chef-pending-btn" class="top-bar-btn">订单<span id="chef-pending-count" class="badge">0</span></button>
-        <button id="chef-logout" class="top-bar-btn">退出</button>
+        <button id="menu-logout" class="top-bar-btn">退出</button>
       </div>
     </div>
     <div class="layout-split">
       <div class="cat-sidebar" id="chef-sidebar"></div>
       <div class="dish-main" id="chef-main"></div>
     </div>
-    <nav class="bottom-nav">
-      <button class="nav-item active" data-nav="chef"><span class="nav-icon">📋</span>菜单</button>
-      <button class="nav-item" data-nav="orders"><span class="nav-icon">📊</span>订单</button>
-    </nav>
-    <button id="chef-fab" class="fab" style="bottom:70px;">+</button>
-  </div>
-
-  <!-- ============================== Customer Home ============================== -->
-  <div id="page-customer" class="page hidden">
-    <div id="cust-banner" class="banner-hero">
-      <div class="banner-bg" id="cust-banner-bg"></div>
-      <div class="banner-text" id="cust-banner-msg">今天想吃点什么？</div>
-    </div>
-    <div id="cust-layout" class="layout-split">
-      <div class="cat-sidebar" id="cust-sidebar"></div>
-      <div class="dish-main">
-        <div id="cust-grid-section"><div id="cust-grid"></div></div>
-        <div id="cust-fav-section" class="hidden"><div id="cust-fav-grid"></div></div>
-      </div>
-    </div>
-    <div class="cart-bar" id="cust-cart-bar">
+    <!-- Cart bar (customer only, hidden by default) -->
+    <div class="cart-bar" id="cust-cart-bar" style="display:none">
       <div class="cart-bar-icon">🛒<span class="count" id="cust-cart-count">0</span></div>
       <div class="cart-bar-info">
         <div class="cart-bar-total" id="cust-cart-total">¥0</div>
-        <div class="cart-bar-detail" id="cust-cart-detail">空空如也 🥲</div>
+        <div class="cart-bar-detail" id="cust-cart-detail">空空如也</div>
       </div>
       <button class="cart-bar-btn" id="cust-cart-btn">去结算</button>
       <button id="cust-submit" style="display:none"></button>
     </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-nav="menu"><span class="nav-icon">📋</span>菜单</button>
+      <button class="nav-item" data-nav="orders"><span class="nav-icon">📊</span>订单</button>
+    </nav>
+    <button id="chef-fab" class="fab" style="bottom:80px;">+</button>
   </div>
 
-  <!-- ============================== Orders Board (Shared) ============================== -->
+  <!-- ============================== Orders Board ============================== -->
   <div id="page-orders" class="page hidden">
     <div class="top-bar">
       <button id="orders-back" style="font-size:20px;padding:4px 8px;">←</button>
@@ -143,15 +133,32 @@ window.addEventListener('DOMContentLoaded', async () => {
   const user = getUser();
   const profile = getProfile();
 
-  // 定义路由
+  // 定义路由（同一页面，不同角色）
+  const page = document.getElementById('page-menu');
+
   route('chef', async () => {
-    const page = document.getElementById('page-chef');
+    document.getElementById('top-mascot').textContent = '👨‍🍳';
+    document.getElementById('top-title').textContent = '我的菜单';
+    document.getElementById('top-sub').textContent = '今天想让客人们吃点什么？';
+    document.getElementById('chef-banner-edit').style.display = '';
+    document.getElementById('chef-pending-btn').style.display = '';
+    document.getElementById('chef-fab').style.display = '';
+    document.getElementById('cust-cart-bar').style.display = 'none';
+    document.getElementById('page-menu').classList.add('is-chef');
+    document.getElementById('page-menu').classList.remove('is-customer');
     await initChefPage();
     return page;
   });
 
   route('customer', async () => {
-    const page = document.getElementById('page-customer');
+    document.getElementById('top-mascot').textContent = '🍽️';
+    document.getElementById('top-title').textContent = '今天吃什么';
+    document.getElementById('top-sub').textContent = '欢迎光临，选好下单哦~';
+    document.getElementById('chef-banner-edit').style.display = 'none';
+    document.getElementById('chef-pending-btn').style.display = 'none';
+    document.getElementById('chef-fab').style.display = 'none';
+    document.getElementById('page-menu').classList.remove('is-chef');
+    document.getElementById('page-menu').classList.add('is-customer');
     await initCustomerPage();
     return page;
   });
@@ -162,19 +169,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     return page;
   });
 
-  // 底部导航（厨师页内）
-  document.querySelector('#page-chef .bottom-nav').addEventListener('click', e => {
+  // 底部导航
+  document.querySelector('#page-menu .bottom-nav').addEventListener('click', e => {
     const item = e.target.closest('.nav-item');
     if (!item) return;
     navigate(item.dataset.nav);
   });
 
-  // 厨师端跳转订单
+  // 跳转订单
   document.getElementById('chef-pending-btn').addEventListener('click', () => navigate('orders'));
   document.getElementById('orders-back').addEventListener('click', () => {
     navigate(getProfile()?.role === 'chef' ? 'chef' : 'customer');
   });
-  document.getElementById('chef-logout').addEventListener('click', signOut);
+  document.getElementById('menu-logout').addEventListener('click', signOut);
 
   // ----------------------------------------
   // 登录/注册表单
