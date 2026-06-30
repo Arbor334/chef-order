@@ -45,27 +45,33 @@
         <button id="chef-logout">退出</button>
       </div>
     </div>
+    <div id="chef-banner-bar" class="chef-banner-bar" style="display:none">
+      <span class="chef-banner-icon">📢</span>
+      <span id="chef-banner-text" class="chef-banner-text">点此设置今日留言...</span>
+      <button id="chef-banner-edit" class="chef-banner-edit">✏️</button>
+    </div>
     <div id="chef-list" style="padding-bottom:80px"></div>
     <button id="chef-fab" class="fab">+</button>
   </div>
 
   <!-- ============================== Customer Home ============================== -->
   <div id="page-customer" class="page hidden">
-    <div class="page-head">
-      <h2>🍽️ 今天吃什么</h2>
-      <div class="head-actions">
-        <button id="cust-fav-tab">❤️ 收藏</button>
-        <button id="cust-logout">退出</button>
+    <!-- Banner Hero -->
+    <div id="cust-banner" class="banner-hero">
+      <div class="banner-bg" id="cust-banner-bg"></div>
+      <div class="banner-text" id="cust-banner-msg">今天想吃点什么？</div>
+    </div>
+    <!-- 双栏布局 -->
+    <div id="cust-layout" class="layout-split">
+      <div class="cat-sidebar" id="cust-sidebar"></div>
+      <div class="dish-main">
+        <div id="cust-grid-section" class="grid-section">
+          <div id="cust-grid"></div>
+        </div>
+        <div id="cust-fav-section" class="fav-section hidden">
+          <div id="cust-fav-grid"></div>
+        </div>
       </div>
-    </div>
-    <div id="cust-cats" class="cat-tabs"></div>
-    <!-- 菜品列表 -->
-    <div id="cust-grid-section" class="grid-section">
-      <div id="cust-grid" class="dish-grid"></div>
-    </div>
-    <!-- 收藏 -->
-    <div id="cust-fav-section" class="fav-section hidden">
-      <div id="cust-fav-grid" class="dish-grid"></div>
     </div>
     <!-- 购物车 -->
     <div class="cart-bar" id="cust-cart-bar">

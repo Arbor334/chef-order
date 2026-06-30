@@ -110,3 +110,13 @@ export function unsubscribeAll() {
   _orderSub?.unsubscribe();
   _dishSub?.unsubscribe();
 }
+
+// ==================== Banner ====================
+export async function loadBanner() {
+  const sb = getSupabase();
+  const { data, error } = await sb.from('banner').select('*').eq('id', 1).single();
+  if (error && error.code !== 'PGRST116') throw error;
+  const banner = data || { id: 1, message: '今天想吃点什么？', image_url: '' };
+  emit('banner-loaded', banner);
+  return banner;
+}

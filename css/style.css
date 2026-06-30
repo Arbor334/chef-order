@@ -95,11 +95,45 @@ img { max-width:100%; }
 .dish-card-badge { position:absolute; top:8px; right:8px; background:var(--ac); color:#fff; font-size:10px; padding:2px 8px; border-radius:8px; font-weight:600; }
 
 /* ==================== Hotpot Section ==================== */
-.hotpot-banner { margin:0 12px 12px; padding:12px 16px; border-radius:var(--radius); background:linear-gradient(135deg, #fce4ec, #ffcdd2); display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600; color:var(--hotpot); }
-.hotpot-banner .hb-icon { font-size:28px; }
+.hotpot-banner { margin:0 0 8px; padding:10px 14px; border-radius:var(--radius-sm); background:linear-gradient(135deg, #fce4ec, #ffcdd2); display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--hotpot); }
+.hotpot-banner .hb-icon { font-size:24px; }
 @media (prefers-color-scheme: dark) {
   .hotpot-banner { background:linear-gradient(135deg, #3a1a22, #4a2028); }
 }
+
+/* ==================== Banner Hero ==================== */
+.banner-hero { position:relative; width:100%; padding-top:35%; min-height:120px; overflow:hidden; background:linear-gradient(135deg, #667eea, #764ba2); }
+.banner-bg { position:absolute; inset:0; background:center/cover no-repeat; opacity:.3; }
+.banner-bg.has-bg { opacity:.85; }
+.banner-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:20px; font-size:18px; font-weight:700; color:#fff; text-align:center; text-shadow:0 2px 8px rgba(0,0,0,.3); }
+@media (prefers-color-scheme: dark) {
+  .banner-hero { background:linear-gradient(135deg, #2d1b4e, #1a1035); }
+}
+
+/* ==================== Dual Column Layout ==================== */
+.layout-split { display:flex; height:calc(100dvh - var(--banner-h, 150px) - 120px); }
+.cat-sidebar { width:70px; flex-shrink:0; overflow-y:auto; padding:8px 0; background:var(--bg); border-right:1px solid var(--bd); scrollbar-width:none; }
+.cat-sidebar::-webkit-scrollbar { display:none; }
+.sidebar-cat { display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 4px; cursor:pointer; transition:all .15s; position:relative; border-radius:0; }
+.sidebar-cat:active { background:var(--bgh); }
+.sidebar-cat.active { background:var(--acd); }
+.sidebar-cat.active::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; background:var(--ac); border-radius:0 2px 2px 0; }
+.sidebar-cat-icon { font-size:24px; line-height:1; }
+.sidebar-cat-name { font-size:11px; font-weight:500; color:var(--tx2); }
+.sidebar-cat.active .sidebar-cat-name { color:var(--ac); font-weight:700; }
+.sidebar-cat-count { font-size:10px; color:var(--tx3); background:var(--bg3); min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+.sidebar-cat.hotpot { color:var(--hotpot); }
+.sidebar-cat.hotpot.active { background:rgba(211,47,47,.08); }
+.sidebar-cat.hotpot.active .sidebar-cat-name { color:var(--hotpot); }
+
+.dish-main { flex:1; overflow-y:auto; padding-bottom:80px; }
+
+/* ==================== Chef Banner Bar ==================== */
+.chef-banner-bar { display:flex; align-items:center; gap:10px; padding:10px 16px; margin:8px 16px; background:var(--bg3); border-radius:var(--radius-sm); cursor:pointer; border:1.5px dashed var(--bd2); transition:all .15s; }
+.chef-banner-bar:hover { border-color:var(--ac); }
+.chef-banner-icon { font-size:18px; }
+.chef-banner-text { flex:1; font-size:13px; color:var(--tx2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chef-banner-edit { font-size:16px; padding:2px 8px; }
 
 /* ==================== Chef Dish List（保持原样）==================== */
 .chef-cat-section { margin-bottom:4px; }

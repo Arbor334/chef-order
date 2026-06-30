@@ -3,7 +3,7 @@
 // ============================================================
 import { CONFIG } from '../config.js';
 import { getSupabase, getUser } from './supabase.js';
-import { store, loadDishes, loadOrders, subscribeOrders } from './store.js';
+import { store, loadDishes, loadOrders, subscribeOrders, loadBanner } from './store.js';
 import { toast, modal } from './ui.js';
 import { DISH_EMOJI, catGradient } from './shared.js';
 
@@ -15,6 +15,7 @@ export async function initChefPage() {
 
   await loadDishes();
   await loadOrders({ status: 'pending' });
+  initBannerEditor();
   renderDishList();
 
   subscribeOrders(() => {
@@ -249,6 +250,53 @@ async function showDishForm(dish = null) {
 
   await loadDishes();
   renderDishList();
+}
+
+// Banner 编辑
+async function initBannerEditor() {
+  const banner = await loadBanner();
+  const bar = document.getElementById('chef-banner-bar');
+  const text = document.getElementById('chef-banner-text');
+  if (bar && text) {
+    bar.style.display = 'flex';
+    text.textContent = banner.message || '点此设置今日留言...';
+  }
+
+  document.getElementById('chef-banner-edit').addEventListener('click', () => showBannerForm(banner));
+}
+
+async function showBannerForm(banner) {
+  const formHtml = `
+    <div class="form-g">
+      <label>今日留言</label>
+      <textarea id="bn-msg" rows="3" placeholder="今天想对吃货说的话...">${banner.message || ''}</textarea>
+    </div>
+    <div class="form-g">
+      <label>背景图 <span class="form-note">可选</span></label>
+      <input type="file" id="bn-img" accept="image/*"/>
+      ${banner.image_url ? `<div class="form-img-preview"><img src="${banner.image_url}"/></div>` : ''}
+    </div>`;
+
+  const result = await modal('✏️ 编辑今日 Banner', formHtml, [
+    { text: '取消', value: 'cancel' },
+    { text: '保存', value: 'confirm', cls: 'btn-primary' }
+  ]);
+  if (result !== 'confirm') return;
+
+  const message = document.getElementById('bn-msg')?.value.trim() || '';
+  let image_url = banner.image_url || '';
+  const file = document.getElementById('bn-img')?.files?.[0];
+  if (file) {
+    try { image_url = await uploadImage(file); } catch (e) { toast('图片上传失败', 'error'); return; }
+  }
+
+  const sb = getSupabase();
+  const { error } = await sb.from('banner').upsert({ id: 1, message, image_url }, { onConflict: 'id' });
+  if (error) { toast('保存失败: ' + error.message, 'error'); return; }
+
+  const text = document.getElementById('chef-banner-text');
+  if (text) text.textContent = message;
+  toast('Banner 已更新', 'success');
 }
 
 async function uploadImage(file) {
