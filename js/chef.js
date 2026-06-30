@@ -1,190 +1,154 @@
 // ============================================================
-// 厨师端 v5 — 美团风格：顶栏+侧栏+卡片+底部导航
+// 厨师端 v6
 // ============================================================
 import { CONFIG } from '../config.js';
-import { getSupabase, getUser } from './supabase.js';
-import { store, loadDishes, loadOrders, subscribeOrders, loadBanner, subscribeBanner } from './store.js';
+import { getSupabase } from './supabase.js';
+import { store, loadDishes, loadOrders, subscribeOrders, loadBanner } from './store.js';
 import { toast, modal } from './ui.js';
 import { DISH_EMOJI, catGradient } from './shared.js';
 
 let activeCat = CONFIG.CATEGORIES[0];
-export let _chefInited = false;
 
 export async function initChefPage() {
-  if (_chefInited) return;
-  _chefInited = true;
   await loadDishes();
   await loadOrders({ status: 'pending' });
-  await renderChefBanner();
-  initBannerEditor();
+  await renderBanner();
   renderSidebar();
   renderDishList(activeCat);
 
-  // 侧栏点击
-  document.getElementById('chef-sidebar').addEventListener('click', e => {
+  // ⚡ onclick 天然替换，永不重复叠加
+  document.getElementById('chef-sidebar').onclick = e => {
     const item = e.target.closest('.sidebar-cat');
     if (!item) return;
     activeCat = item.dataset.cat;
     renderSidebar();
     renderDishList(activeCat);
-  });
+  };
 
-  // FAB
-  document.getElementById('chef-fab').addEventListener('click', () => showDishForm());
-
-  // 实时订单
-  subscribeOrders(() => loadOrders({ status: 'pending' }).then(renderPendingBadge));
-
-  // 主区域事件
-  document.getElementById('chef-main').addEventListener('click', e => {
+  document.getElementById('chef-main').onclick = e => {
     const editBtn = e.target.closest('.edit-btn');
     const delBtn = e.target.closest('.del-btn');
     const card = e.target.closest('.chef-card');
     if (!card) return;
-    const id = card.dataset.id;
-    const dish = store.dishes.find(d => d.id === id);
+    const dish = store.dishes.find(d => d.id === card.dataset.id);
     if (!dish) return;
     if (editBtn) { showDishForm(dish); return; }
     if (delBtn) { deleteDish(dish); return; }
-  });
+  };
+
+  document.getElementById('chef-fab').onclick = () => showDishForm();
+  document.getElementById('chef-banner-edit').onclick = () => showBannerForm();
+  document.getElementById('cust-banner').onclick = () => showBannerForm();
+  document.getElementById('cust-banner').style.cursor = 'pointer';
+
+  subscribeOrders(() => { loadOrders({ status: 'pending' }).then(renderPendingBadge); });
+  renderPendingBadge();
+}
+
+// ===== Banner =====
+async function renderBanner() {
+  try {
+    const b = await loadBanner();
+    const m = document.getElementById('cust-banner-msg');
+    const g = document.getElementById('cust-banner-bg');
+    if (m) m.textContent = b.message || '今天想吃点什么？';
+    if (g && b.image_url) { g.style.backgroundImage = `url(${b.image_url})`; g.classList.add('has-bg'); }
+  } catch (_) {}
+}
+
+async function showBannerForm() {
+  let banner = { message: '', image_url: '' };
+  try { banner = await loadBanner(); } catch (_) { }
+  const html = `<div class="form-g"><label>今天想对她说什么</label><textarea id="bn-msg" rows="3" placeholder="比如：今天做了红烧肉~">${banner.message||''}</textarea></div>
+    <div class="form-g"><label>背景图</label><input type="file" id="bn-img" accept="image/*"/>${banner.image_url?`<div class="form-img-preview"><img src="${banner.image_url}"/></div>`:''}</div>`;
+  const r = await modal('📢 每日示爱', html, [{ text: '取消', value: 'no' }, { text: '保存并推送 💌', value: 'ok', cls: 'btn-primary' }]);
+  if (r !== 'ok') return;
+  const msg = document.getElementById('bn-msg')?.value.trim() || '';
+  let img = banner.image_url || '';
+  const f = document.getElementById('bn-img')?.files?.[0];
+  if (f) { try { img = await uploadImage(f); } catch (e) { toast('上传失败', 'error'); return; } }
+  await getSupabase().from('banner').upsert({ id: 1, message: msg, image_url: img }, { onConflict: 'id' });
+  await renderBanner();
+  toast('已推送 💌', 'success');
 }
 
 // ===== Sidebar =====
 function renderSidebar() {
-  const el = document.getElementById('chef-sidebar');
-  el.innerHTML = CONFIG.CATEGORIES.map(c => {
-    const icon = CONFIG.CATEGORY_ICONS[c] || '🍽️';
-    const count = store.dishes.filter(d => d.category === c).length;
+  document.getElementById('chef-sidebar').innerHTML = CONFIG.CATEGORIES.map(c => {
+    const cnt = store.dishes.filter(d => d.category === c).length;
     return `<div class="sidebar-cat ${c===activeCat?'active':''}" data-cat="${c}">
-      <span class="sidebar-cat-icon">${icon}</span>
+      <span class="sidebar-cat-icon">${CONFIG.CATEGORY_ICONS[c]||'🍽️'}</span>
       <span class="sidebar-cat-name">${c}</span>
-      ${count>0?`<span class="sidebar-cat-count">${count}</span>`:''}
+      ${cnt>0?`<span class="sidebar-cat-count">${cnt}</span>`:''}
     </div>`;
   }).join('');
 }
 
-// ===== Dish List =====
 function renderDishList(cat) {
   const el = document.getElementById('chef-main');
   const dishes = store.dishes.filter(d => d.category === cat);
-  if (!dishes.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div>这里还没有菜品<br><span style="font-size:12px;">点 + 添加</span></div></div>`;
-    return;
-  }
-  el.innerHTML = `<div class="dish-list">${dishes.map(d => renderChefCard(d)).join('')}</div>`;
-}
-
-function renderChefCard(d) {
-  const emoji = DISH_EMOJI[d.name] || CONFIG.CATEGORY_ICONS[d.category] || '🍽️';
-  const hasImg = d.image_url && d.image_url.length > 10;
-  const gradient = catGradient(d.category);
-  const steps = d.steps ? d.steps.split('\n').filter(s=>s.trim()) : [];
-  const ingr = d.ingredients ? d.ingredients.split(',').map(s=>s.trim()).filter(Boolean) : [];
-
-  return `<div class="chef-card" data-id="${d.id}">
-    <div class="chef-card-img" style="background:${gradient};">
-      ${hasImg ? `<img src="${d.image_url}" alt="${d.name}"/>` : emoji}
-    </div>
-    <div class="chef-card-body">
-      <div class="chef-card-title">${d.name}</div>
-      ${ingr.length ? `<div class="chef-card-desc">${ingr.slice(0,4).join(' · ')}</div>` : ''}
-      <div class="chef-card-meta">
-        <span class="chef-card-tag accent">⏱ ${d.cooking_time||15}min</span>
-        <span class="chef-card-tag">📝 ${steps.length}步</span>
-        <span class="chef-card-tag">🛒 ${ingr.length}种</span>
+  if (!dishes.length) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div>暂无菜品</div></div>`; return; }
+  el.innerHTML = `<div class="dish-list">${dishes.map(d => {
+    const emoji = DISH_EMOJI[d.name]||CONFIG.CATEGORY_ICONS[d.category]||'🍽️';
+    const hasImg = d.image_url&&d.image_url.length>10;
+    const steps = d.steps?d.steps.split('\n').filter(s=>s.trim()):[];
+    const ingr = d.ingredients?d.ingredients.split(',').map(s=>s.trim()).filter(Boolean):[];
+    return `<div class="chef-card" data-id="${d.id}">
+      <div class="chef-card-img" style="background:${catGradient(d.category)};">${hasImg?`<img src="${d.image_url}" alt="${d.name}"/>`:emoji}</div>
+      <div class="chef-card-body">
+        <div class="chef-card-title">${d.name}</div>
+        ${ingr.length?`<div class="chef-card-desc">${ingr.slice(0,4).join(' · ')}</div>`:''}
+        <div class="chef-card-meta"><span class="chef-card-tag accent">⏱${d.cooking_time||15}min</span><span class="chef-card-tag">📝${steps.length}步</span><span class="chef-card-tag">🛒${ingr.length}种</span></div>
+        <div class="chef-card-bottom"><span class="chef-card-price">${d.price?'¥'+d.price:''}</span></div>
       </div>
-      <div class="chef-card-bottom">
-        <span class="chef-card-price">${d.price ? '¥'+d.price : ''}</span>
-      </div>
-    </div>
-    <div class="chef-card-actions">
-      <button class="edit-btn">✏️</button>
-      <button class="del-btn">🗑️</button>
-    </div>
-  </div>`;
+      <div class="chef-card-actions"><button class="edit-btn">✏️</button><button class="del-btn">🗑️</button></div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
-// ===== Banner =====
-async function renderChefBanner() {
-  try {
-    const banner = await loadBanner();
-    const msgEl = document.getElementById('cust-banner-msg');
-    const bgEl = document.getElementById('cust-banner-bg');
-    if (msgEl) msgEl.textContent = banner.message || '今天想吃点什么？';
-    if (bgEl && banner.image_url) {
-      bgEl.style.backgroundImage = `url(${banner.image_url})`;
-      bgEl.classList.add('has-bg');
-    }
-  } catch (_) {}
-}
-
-function initBannerEditor() {
-  document.getElementById('cust-banner').style.cursor = 'pointer';
-  document.getElementById('chef-banner-edit').addEventListener('click', () => showBannerForm());
-  document.getElementById('cust-banner').addEventListener('click', () => showBannerForm());
-}
-
-async function showBannerForm() {
-  let banner = { message:'', image_url:'' };
-  try { banner = await loadBanner(); } catch(_) {}
-  const html = `<div class="form-g"><label>今天想对她说的话</label><textarea id="bn-msg" rows="3" placeholder="比如：今天做了红烧肉，快下单~">${banner.message||''}</textarea></div>
-    <div class="form-g"><label>背景图（可选）</label><input type="file" id="bn-img" accept="image/*"/>${banner.image_url?`<div class="form-img-preview"><img src="${banner.image_url}"/></div>`:''}</div>`;
-  const r = await modal('📢 今日想说', html, [{text:'取消',value:'cancel'},{text:'保存并推送',value:'ok',cls:'btn-primary'}]);
-  if (r !== 'ok') return;
-  const msg = document.getElementById('bn-msg')?.value.trim()||'';
-  let img = banner.image_url||'';
-  const f = document.getElementById('bn-img')?.files?.[0];
-  if(f){try{img=await uploadImage(f);}catch(e){toast('上传失败','error');return;}}
-  const sb = getSupabase();
-  await sb.from('banner').upsert({id:1,message:msg,image_url:img},{onConflict:'id'});
-  // 立即刷新 banner
-  await renderChefBanner();
-  toast('已推送到她的页面！','success');
-}
-
-// ===== Dish Form =====
+// ===== Form =====
 async function showDishForm(dish=null) {
   const isEdit = !!dish;
   const html = `<div class="form-g"><label>菜名 *</label><input id="df-name" value="${dish?.name||''}" required/></div>
     <div class="form-g"><label>分类</label><select id="df-cat">${CONFIG.CATEGORIES.map(c=>`<option value="${c}" ${c===(dish?.category||CONFIG.CATEGORIES[0])?'selected':''}>${c}</option>`).join('')}</select></div>
-    <div class="form-g"><label>食材</label><input id="df-ingr" value="${dish?.ingredients||''}" placeholder="猪肉, 青椒, 蒜"/></div>
-    <div class="form-g"><label>时间(分钟)</label><select id="df-time">${CONFIG.COOKING_TIMES.map(t=>`<option value="${t}" ${t===(dish?.cooking_time||15)?'selected':''}>${t}</option>`).join('')}</select></div>
-    <div class="form-g"><label>价格 ¥</label><input id="df-price" type="number" value="${dish?.price||0}" placeholder="0"/></div>
-    <div class="form-g"><label>步骤 (每行一步)</label><textarea id="df-steps" rows="6" placeholder="1. 焯水&#10;2. 炒糖色&#10;3. 炖煮">${dish?.steps||''}</textarea></div>
+    <div class="form-g"><label>食材(逗号分隔)</label><input id="df-ingr" value="${dish?.ingredients||''}" placeholder="猪肉, 青椒"/></div>
+    <div class="form-g"><label>时间(分钟)</label><select id="df-time">${CONFIG.COOKING_TIMES.map(t=>`<option value="${t}" ${t===(dish?.cooking_time||15)?'selected':''}>${t}min</option>`).join('')}</select></div>
+    <div class="form-g"><label>价格 ¥</label><input id="df-price" type="number" value="${dish?.price||0}"/></div>
+    <div class="form-g"><label>步骤(每行一步)</label><textarea id="df-steps" rows="6" placeholder="1. 焯水&#10;2. 炒香&#10;3. 炖煮">${dish?.steps||''}</textarea></div>
     <div class="form-g"><label>图片</label><input type="file" id="df-img" accept="image/*"/>${dish?.image_url?`<div class="form-img-preview"><img src="${dish.image_url}"/></div>`:''}</div>`;
-  const r = await modal(isEdit?'编辑菜品':'➕ 添加菜品', html, [{text:'取消',value:'cancel'},{text:isEdit?'保存':'添加',value:'ok',cls:'btn-primary'}]);
+  const r = await modal(isEdit?'编辑菜品':'➕ 添加菜品', html, [{text:'取消',value:'no'},{text:isEdit?'保存':'添加',value:'ok',cls:'btn-primary'}]);
   if (r !== 'ok') return;
   const name = document.getElementById('df-name')?.value.trim();
   if (!name) { toast('请输入菜名','error'); return; }
   const payload = {
-    name, category: document.getElementById('df-cat')?.value,
-    ingredients: document.getElementById('df-ingr')?.value.trim()||'',
-    cooking_time: parseInt(document.getElementById('df-time')?.value)||15,
-    price: parseInt(document.getElementById('df-price')?.value)||0,
-    steps: document.getElementById('df-steps')?.value.trim()||'',
-    is_active: true
+    name, category:document.getElementById('df-cat')?.value,
+    ingredients:document.getElementById('df-ingr')?.value.trim()||'',
+    cooking_time:parseInt(document.getElementById('df-time')?.value)||15,
+    price:parseInt(document.getElementById('df-price')?.value)||0,
+    steps:document.getElementById('df-steps')?.value.trim()||'',
+    is_active:true
   };
   let img = dish?.image_url||'';
   const f = document.getElementById('df-img')?.files?.[0];
-  if(f){try{img=await uploadImage(f);}catch(e){toast('上传失败','error');return;}}
+  if (f) { try { img = await uploadImage(f); } catch (e) { toast('上传失败','error'); return; } }
   payload.image_url = img;
   const sb = getSupabase();
-  if(isEdit){await sb.from('dishes').update(payload).eq('id',dish.id);toast('已更新','success');}
-  else {await sb.from('dishes').insert(payload);toast('新菜上架！','success');}
+  if (isEdit) { await sb.from('dishes').update(payload).eq('id',dish.id); toast('已更新','success'); }
+  else { await sb.from('dishes').insert(payload); toast('新菜上架！','success'); }
   await loadDishes(); renderSidebar(); renderDishList(activeCat);
 }
 
 async function deleteDish(dish) {
-  const r = await modal('删除',`确定删除「${dish.name}」？`, [{text:'取消',value:'cancel'},{text:'删除',value:'ok',cls:'btn-danger'}]);
-  if(r!=='ok')return;
+  const r = await modal('删除',`确定删除「${dish.name}」？`,[{text:'取消',value:'no'},{text:'删除',value:'ok',cls:'btn-danger'}]);
+  if (r!=='ok') return;
   await getSupabase().from('dishes').update({is_active:false}).eq('id',dish.id);
-  toast('已删除','success'); await loadDishes(); renderSidebar(); renderDishList(activeCat);
+  toast('已删除'); await loadDishes(); renderSidebar(); renderDishList(activeCat);
 }
 
 function renderPendingBadge() {
-  const badge = document.getElementById('chef-pending-count');
-  if(!badge)return; const cnt = store.orders.filter(o=>o.status==='pending').length;
-  badge.textContent = cnt; badge.style.display = cnt>0?'flex':'none';
+  const b = document.getElementById('chef-pending-count');
+  if(!b)return; const c = store.orders.filter(o=>o.status==='pending').length;
+  b.textContent=c; b.style.display=c>0?'flex':'none';
 }
 
 async function uploadImage(file) {
