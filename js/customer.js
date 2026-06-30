@@ -14,7 +14,9 @@ export async function initCustomerPage() {
   await loadDishes();
   await loadFavorites(user.id);
   await renderBanner();
-  subscribeBanner(() => renderBanner());   // 厨师改了Banner实时推过来
+  subscribeBanner(() => renderBanner());
+  // 兜底：每5秒轮询一次，确保Banner更新
+  setInterval(() => renderBanner(), 5000);
 
   // 隐藏厨师专属
   document.getElementById('chef-fab').style.display = 'none';
@@ -57,9 +59,17 @@ export async function initCustomerPage() {
 async function renderBanner() {
   try {
     const b = await loadBanner();
-    document.getElementById('cust-banner-msg').textContent = b.message || '今天想吃点什么？';
-    const bg = document.getElementById('cust-banner-bg');
-    if (b.image_url) { bg.style.backgroundImage = `url(${b.image_url})`; bg.classList.add('has-bg'); }
+    const msgEl = document.getElementById('cust-banner-msg');
+    const bgEl = document.getElementById('cust-banner-bg');
+    if (!msgEl || !bgEl) return;
+    msgEl.textContent = b.message || '今天想吃点什么？';
+    if (b.image_url) {
+      bgEl.style.backgroundImage = `url(${b.image_url})`;
+      bgEl.classList.add('has-bg');
+    } else {
+      bgEl.style.backgroundImage = '';
+      bgEl.classList.remove('has-bg');
+    }
   } catch (_) {}
 }
 
