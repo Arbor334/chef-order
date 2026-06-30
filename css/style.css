@@ -203,6 +203,24 @@ input,select,button,textarea { font:inherit; color:inherit; } button { cursor:po
 .toast { position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-120px); padding:10px 24px; border-radius:22px; font-size:13px; font-weight:700; z-index:999; transition:transform .3s; color:#fff; background:#333; white-space:nowrap; max-width:90vw; box-shadow:0 8px 24px rgba(0,0,0,.2); }
 .toast.show { transform:translateX(-50%) translateY(0); } .toast-error { background:var(--danger); } .toast-success { background:var(--success); }
 
+/* ===== Page Tabs ===== */
+.page-tabs { display:flex; gap:4px; }
+.page-tab { padding:5px 12px; border-radius:14px; font-size:12px; color:var(--tx3); background:var(--bg3); transition:.15s; }
+.page-tab.active { background:var(--ac); color:#fff; font-weight:600; }
+
+/* ===== Shopping List ===== */
+.shoplist-wrap { padding:12px; }
+.shoplist-summary { text-align:center; font-size:12px; color:var(--tx3); margin-bottom:16px; }
+.shoplist-group { margin-bottom:20px; }
+.shoplist-group h4, .shoplist-by-dish h4 { font-size:14px; margin-bottom:10px; }
+.shoplist-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--bg2); border-radius:var(--radius-sm); margin-bottom:6px; cursor:pointer; font-size:14px; transition:.15s; }
+.shoplist-item:active { background:var(--bgh); }
+.shoplist-item.done { opacity:.5; text-decoration:line-through; }
+.shoplist-check { font-size:18px; flex-shrink:0; }
+.shoplist-dish { padding:8px 12px; background:var(--bg); border-radius:var(--radius-sm); margin-bottom:6px; }
+.shoplist-dish-name { font-weight:700; font-size:14px; }
+.shoplist-dish-ingr { font-size:12px; color:var(--tx3); margin-top:4px; }
+
 /* ===== Empty ===== */
 .empty-state { text-align:center; padding:48px 16px; color:var(--tx3); font-size:13px; }
 .empty-icon { font-size:48px; margin-bottom:12px; opacity:.8; }
